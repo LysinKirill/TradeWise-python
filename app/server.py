@@ -15,14 +15,13 @@ def serve():
 
     server.add_insecure_port(f'{SERVER_HOST}:{SERVER_PORT}')
 
-    # Print the connection path when the server starts
     print(f'Starting server on {SERVER_HOST}:{SERVER_PORT}...')
     print(f'Connection path: http://{SERVER_HOST}:{SERVER_PORT}')
 
     server.start()
     try:
         while True:
-            time.sleep(86400)  # Keeps the server running indefinitely
+            time.sleep(86400)
     except KeyboardInterrupt:
         server.stop(0)
 
