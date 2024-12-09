@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package hello;
+
+// Define the HelloWorld service
+service HelloWorld {
+    // A simple "Hello" RPC
+    rpc SayHello (HelloRequest) returns (HelloResponse);
+    // An Echo RPC
+    rpc Echo (EchoRequest) returns (EchoResponse);
+}
+
+// Request/Response messages
+message HelloRequest {
+    string name = 1;
+}
+
+message HelloResponse {
+    string message = 1;
+}
+
+message EchoRequest {
+    string text = 1;
+}
+
+message EchoResponse {
+    string text = 1;
+}
