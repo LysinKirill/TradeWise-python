@@ -22,14 +22,7 @@ Ensure you have the following installed on your system:
 
 ### Installation
 
-1. Clone the repository:
-
-    ```bash
-    git clone https://github.com/your-username/tradewise-backend.git
-    cd tradewise-backend
-    ```
-
-2. Create a virtual environment:
+1. Create a virtual environment:
 
     ```bash
     #mac
@@ -40,7 +33,7 @@ Ensure you have the following installed on your system:
     python -m venv .venv
     ```
 
-3. Activate the virtual environment:
+2. Activate the virtual environment:
 
     - On Windows:
         ```bash
@@ -51,7 +44,7 @@ Ensure you have the following installed on your system:
         source .venv/bin/activate
         ```
 
-4. Install project dependencies:
+3. Install project dependencies:
 
     ```bash
     pip install -r requirements.txt
