@@ -1,0 +1,4 @@
+grpcio
+dependency_injector
+protobuf
+grpcio-tools
