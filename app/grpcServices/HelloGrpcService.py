@@ -3,7 +3,7 @@ import app.domain.services.IHelloService as IHelloService
 
 
 class HelloGrpcService(hello_pb2_grpc.HelloWorldServicer):
-    def __init__(self, hello_service: IHelloService):  # Inject the abstraction
+    def __init__(self, hello_service: IHelloService):
         self.hello_service = hello_service
 
     def SayHello(self, request, context):
