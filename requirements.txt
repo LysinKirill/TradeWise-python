@@ -5,3 +5,4 @@ grpcio-tools==1.69.0
 protobuf==5.29.2
 python-dotenv==1.0.1
 setuptools==75.7.0
+python-dotenv==1.0.1

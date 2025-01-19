@@ -54,6 +54,7 @@ Ensure you have the following installed on your system:
 4. Regenerate python classes for proto (Optional):
    ```bash
     python -m grpc_tools.protoc -I=externalClients\TInvestApi\proto --python_out=externalClients\TInvestApi\proto --grpc_python_out=externalClients\TInvestApi\proto externalClients\TInvestApi\proto\*.proto
+    python -m grpc_tools.protoc -I=app\proto --python_out=app\proto --grpc_python_out=app\proto app\proto\*.proto
    ```
    ```bash
     python -m postProcessing.Processor
@@ -76,7 +77,7 @@ To start the backend server, follow these steps:
 2. Ensure the `.env` file is properly configured with your token for **debug purposes**.
 3. Run the main server script:
 
-    ```bash
+    ```shell
     python -m app.server
     ```
 
