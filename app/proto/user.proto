@@ -1,17 +1,29 @@
 syntax = "proto3";
-import "google/protobuf/empty.proto";
 
 package user;
 
 service UserService {
-  rpc GetAccounts (google.protobuf.Empty) returns (GetAccountsResponse);
+  rpc GetAccounts (GetAccountsRequest) returns (GetAccountsResponse);
 }
 
+
+message GetAccountsRequest {
+  AccountStatus account_status = 1;
+}
 
 message GetAccountsResponse {
   repeated AccountInfo accounts = 1;
 }
 
 message AccountInfo {
-  string name = 1;
+  string id = 1;
+  string name = 2;
+}
+
+enum AccountStatus {
+  ACCOUNT_STATUS_UNSPECIFIED = 0;
+  ACCOUNT_STATUS_NEW = 1;
+  ACCOUNT_STATUS_OPEN = 2;
+  ACCOUNT_STATUS_CLOSED = 3;
+  ACCOUNT_STATUS_ALL = 4;
 }
