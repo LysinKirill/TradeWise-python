@@ -54,16 +54,15 @@ class Container(containers.DeclarativeContainer):
 
 
 def serve():
-    # Load environment variables
     load_dotenv()
 
-    ACCESS_TOKEN = os.environ.get("INVEST_TOKEN")
-    if not ACCESS_TOKEN:
+    access_token = os.environ.get("INVEST_TOKEN")
+    if not access_token:
         raise ValueError("Environment variable INVEST_TOKEN is not set!")
 
     container = Container()
     container.config.override({
-        'INVEST_TOKEN': ACCESS_TOKEN,
+        'INVEST_TOKEN': access_token,
         'TINKOFF_API_PROD': TINKOFF_API_PROD
     })
 
@@ -79,8 +78,8 @@ def serve():
         while True:
             time.sleep(SECONDS_IN_DAY)
     except KeyboardInterrupt:
+        print("Stopping server...")
         server.stop(0)
-
 
 
 def register_grpc_services(container: Container, server: grpc.Server):

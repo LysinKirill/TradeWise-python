@@ -3,9 +3,9 @@
 import grpc
 import warnings
 
-import app.proto.hello_pb2 as hello__pb2
+from app.proto import hello_pb2 as hello__pb2
 
-GRPC_GENERATED_VERSION = '1.68.1'
+GRPC_GENERATED_VERSION = '1.69.0'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -26,8 +26,7 @@ if _version_not_supported:
 
 
 class HelloWorldStub(object):
-    """Define the HelloWorld service
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
         """Constructor.
@@ -48,19 +47,16 @@ class HelloWorldStub(object):
 
 
 class HelloWorldServicer(object):
-    """Define the HelloWorld service
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def SayHello(self, request, context):
-        """A simple "Hello" RPC
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def Echo(self, request, context):
-        """An Echo RPC
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -87,8 +83,7 @@ def add_HelloWorldServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class HelloWorld(object):
-    """Define the HelloWorld service
-    """
+    """Missing associated documentation comment in .proto file."""
 
     @staticmethod
     def SayHello(request,
