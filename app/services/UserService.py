@@ -24,9 +24,9 @@ class UserService(IUserService):
     def __get_account(client_account) -> AccountInfoModel.AccountInfoModel:
         return AccountInfoModel.AccountInfoModel(
             id=client_account.id,
-            type=UserService.__get_account_type(client_account.account_type),
+            type=UserService.__get_account_type(client_account.type),
             name=client_account.name,
-            status=UserService.__get_account_status(client_account.account_status),
+            status=UserService.__get_account_status(client_account.status),
             opened_date=client_account.opened_date.ToDatetime(),
             closed_date=client_account.closed_date.ToDatetime(),
             access_level=UserService.__get_account_access_level(client_account.access_level)
@@ -34,22 +34,12 @@ class UserService(IUserService):
 
     @staticmethod
     def __get_account_type(client_account_type) -> AccountTypeModel.AccountTypeModel:
-        match client_account_type:
-            # add cases for matching
-            case _: raise NotImplementedError("Account type mapping is not implemented.")
-        pass
+        return AccountTypeModel.AccountTypeModel(client_account_type)
 
     @staticmethod
     def __get_account_status(client_account_status) -> AccountStatusModel.AccountStatusModel:
-        match client_account_status:
-            # add cases for matching
-            case _: raise NotImplementedError("Account status mapping is not implemented.")
-        pass
+        return AccountStatusModel.AccountStatusModel(client_account_status)
 
     @staticmethod
     def __get_account_access_level(client_account_access_level) -> AccountAccessLevelModel.AccountAccessLevelModel:
-        match client_account_access_level:
-            # add cases for matching
-            case _: raise NotImplementedError("Account access level mapping is not implemented.")
-        pass
-
+        return AccountAccessLevelModel.AccountAccessLevelModel(client_account_access_level)
