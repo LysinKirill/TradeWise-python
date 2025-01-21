@@ -2,7 +2,7 @@
 
 ## Overview
 
-TradeWise-python is a Python-based backend service designed to handle requests to ML module and provide APIs for various clients
+TradeWise-python is a Python-based backend service designed to handle requests to ML modules and provide APIs for various clients.
 
 The backend includes the following components:
 - **Domain Layer**: Contains service interfaces and core business logic.
@@ -24,12 +24,13 @@ Ensure you have the following installed on your system:
 
 1. Create a virtual environment:
 
+    - On macOS/Linux:
     ```bash
-    #mac
     python3 -m venv .venv
     ```
+
+    - On Windows:
     ```bash
-    #windows
     python -m venv .venv
     ```
 
@@ -50,6 +51,22 @@ Ensure you have the following installed on your system:
     pip install -r requirements.txt
     ```
 
+4. Regenerate python classes for proto (Optional):
+   ```bash
+    python -m grpc_tools.protoc -I=externalClients\TInvestApi\proto --python_out=externalClients\TInvestApi\proto --grpc_python_out=externalClients\TInvestApi\proto externalClients\TInvestApi\proto\*.proto
+    python -m grpc_tools.protoc -I=app\proto --python_out=app\proto --grpc_python_out=app\proto app\proto\*.proto
+   ```
+   ```bash
+    python -m postProcessing.Processor
+   ```
+
+5. Set up your `.env` file (for **debug purposes only**):
+    - Create a `.env` file in the root directory of the project.
+    - Add the following line to the file, replacing `your_token_here` with your actual token:
+      ```
+      INVEST_TOKEN=your_token_here
+      ```
+
 ---
 
 ## Running the Backend Service
@@ -57,13 +74,14 @@ Ensure you have the following installed on your system:
 To start the backend server, follow these steps:
 
 1. Navigate to the project root directory.
-2. Run the main server script:
+2. Ensure the `.env` file is properly configured with your token for **debug purposes**.
+3. Run the main server script:
 
-    ```bash
+    ```shell
     python -m app.server
     ```
 
-3. You should see the following output in your console:
+4. You should see the following output in your console:
 
     ```plaintext
     Starting server on localhost:50051...
@@ -73,20 +91,9 @@ This indicates the gRPC server is running and ready to accept client connections
 
 ---
 
-## Connecting to the Backend
+## Token Management
 
-### Using a gRPC Client
-1. Open a gRPC client tool (e.g., Postman, BloomRPC).
-2. Import the `app/proto/hello.proto` file.
-3. Use the connection details:
-   - **Host**: `localhost`
-   - **Port**: `50051`
-
-### Interacting with the API
-The backend exposes two methods via gRPC:
-- **SayHello**: Returns a greeting message.
-- **Echo**: Echoes back the provided message.
-
-For detailed instructions, refer to the `hello.proto` file.
-
----
+### Debug Option: `.env` File
+The `.env` file can be used to store your `INVEST_TOKEN` for local testing and debugging purposes. For example:
+```plaintext
+INVEST_TOKEN=your_token_here

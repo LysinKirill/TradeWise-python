@@ -1,4 +1,8 @@
-grpcio
-dependency_injector
-protobuf
-grpcio-tools
+dependency-injector==4.45.0
+googleapis-common-protos==1.66.0
+grpcio==1.69.0
+grpcio-tools==1.69.0
+protobuf==5.29.2
+python-dotenv==1.0.1
+setuptools==75.7.0
+python-dotenv==1.0.1
