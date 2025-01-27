@@ -1,0 +1,15 @@
+-e git+https://github.com/LysinKirill/AlgoTrading.git@59321cc8676f17bd0d6413265ba0b571401f096b#egg=AlgoTrading
+certifi==2024.2.2
+charset-normalizer==3.3.2
+dependency-injector==4.44.0
+googleapis-common-protos==1.66.0
+grpcio==1.69.0
+grpcio-tools==1.65.4
+idna==3.6
+protobuf==5.29.2
+python-dotenv==1.0.1
+requests==2.31.0
+setuptools==72.1.0
+six==1.17.0
+urllib3==2.2.1
+youtube-transcript-api==0.6.2

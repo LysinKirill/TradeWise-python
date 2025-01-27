@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-from app.proto import hello_pb2 as hello__pb2
+import signals_pb2 as signals__pb2
 
 GRPC_GENERATED_VERSION = '1.69.0'
 GRPC_VERSION = grpc.__version__
@@ -18,15 +18,16 @@ except ImportError:
 if _version_not_supported:
     raise RuntimeError(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + f' but the generated code in hello_pb2_grpc.py depends on'
+        + f' but the generated code in signals_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
     )
 
 
-class HelloWorldStub(object):
-    """Missing associated documentation comment in .proto file."""
+class SignalServiceStub(object):
+    """Сервис для получения технических сигналов и мнений аналитиков по инструментам
+    """
 
     def __init__(self, channel):
         """Constructor.
@@ -34,59 +35,63 @@ class HelloWorldStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.SayHello = channel.unary_unary(
-                '/hello.HelloWorld/SayHello',
-                request_serializer=hello__pb2.HelloRequest.SerializeToString,
-                response_deserializer=hello__pb2.HelloResponse.FromString,
+        self.GetStrategies = channel.unary_unary(
+                '/tinkoff.public.invest.api.contract.v1.SignalService/GetStrategies',
+                request_serializer=signals__pb2.GetStrategiesRequest.SerializeToString,
+                response_deserializer=signals__pb2.GetStrategiesResponse.FromString,
                 _registered_method=True)
-        self.Echo = channel.unary_unary(
-                '/hello.HelloWorld/Echo',
-                request_serializer=hello__pb2.EchoRequest.SerializeToString,
-                response_deserializer=hello__pb2.EchoResponse.FromString,
+        self.GetSignals = channel.unary_unary(
+                '/tinkoff.public.invest.api.contract.v1.SignalService/GetSignals',
+                request_serializer=signals__pb2.GetSignalsRequest.SerializeToString,
+                response_deserializer=signals__pb2.GetSignalsResponse.FromString,
                 _registered_method=True)
 
 
-class HelloWorldServicer(object):
-    """Missing associated documentation comment in .proto file."""
+class SignalServiceServicer(object):
+    """Сервис для получения технических сигналов и мнений аналитиков по инструментам
+    """
 
-    def SayHello(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+    def GetStrategies(self, request, context):
+        """Запросить стратегии.
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def Echo(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+    def GetSignals(self, request, context):
+        """Запросить сигналы.
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
 
-def add_HelloWorldServicer_to_server(servicer, server):
+def add_SignalServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'SayHello': grpc.unary_unary_rpc_method_handler(
-                    servicer.SayHello,
-                    request_deserializer=hello__pb2.HelloRequest.FromString,
-                    response_serializer=hello__pb2.HelloResponse.SerializeToString,
+            'GetStrategies': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetStrategies,
+                    request_deserializer=signals__pb2.GetStrategiesRequest.FromString,
+                    response_serializer=signals__pb2.GetStrategiesResponse.SerializeToString,
             ),
-            'Echo': grpc.unary_unary_rpc_method_handler(
-                    servicer.Echo,
-                    request_deserializer=hello__pb2.EchoRequest.FromString,
-                    response_serializer=hello__pb2.EchoResponse.SerializeToString,
+            'GetSignals': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetSignals,
+                    request_deserializer=signals__pb2.GetSignalsRequest.FromString,
+                    response_serializer=signals__pb2.GetSignalsResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'hello.HelloWorld', rpc_method_handlers)
+            'tinkoff.public.invest.api.contract.v1.SignalService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('hello.HelloWorld', rpc_method_handlers)
+    server.add_registered_method_handlers('tinkoff.public.invest.api.contract.v1.SignalService', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
-class HelloWorld(object):
-    """Missing associated documentation comment in .proto file."""
+class SignalService(object):
+    """Сервис для получения технических сигналов и мнений аналитиков по инструментам
+    """
 
     @staticmethod
-    def SayHello(request,
+    def GetStrategies(request,
             target,
             options=(),
             channel_credentials=None,
@@ -99,9 +104,9 @@ class HelloWorld(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/hello.HelloWorld/SayHello',
-            hello__pb2.HelloRequest.SerializeToString,
-            hello__pb2.HelloResponse.FromString,
+            '/tinkoff.public.invest.api.contract.v1.SignalService/GetStrategies',
+            signals__pb2.GetStrategiesRequest.SerializeToString,
+            signals__pb2.GetStrategiesResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -113,7 +118,7 @@ class HelloWorld(object):
             _registered_method=True)
 
     @staticmethod
-    def Echo(request,
+    def GetSignals(request,
             target,
             options=(),
             channel_credentials=None,
@@ -126,9 +131,9 @@ class HelloWorld(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/hello.HelloWorld/Echo',
-            hello__pb2.EchoRequest.SerializeToString,
-            hello__pb2.EchoResponse.FromString,
+            '/tinkoff.public.invest.api.contract.v1.SignalService/GetSignals',
+            signals__pb2.GetSignalsRequest.SerializeToString,
+            signals__pb2.GetSignalsResponse.FromString,
             options,
             channel_credentials,
             insecure,
