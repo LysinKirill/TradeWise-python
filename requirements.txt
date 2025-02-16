@@ -6,3 +6,5 @@ protobuf==5.29.2
 python-dotenv==1.0.1
 setuptools==75.7.0
 python-dotenv==1.0.1
+psycopg2-binary==2.9.9
+pydapper~=0.12.0
