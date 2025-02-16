@@ -1,6 +1,6 @@
 from pydapper.commands import Commands
 
-from infrastructure.MigrationAttribute import *
+from migrations.infrastructure.MigrationAttribute import *
 
 
 @migration(version=1, description="Create users table (id, email, invest_api_key)")
