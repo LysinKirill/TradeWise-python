@@ -91,6 +91,30 @@ This indicates the gRPC server is running and ready to accept client connections
 
 ---
 
+## Running Migrations
+To apply database migrations, follow these steps:
+
+1. Navigate to the project root directory.
+2. Ensure the .env file is properly configured with your database connection details (if applicable).
+3. Run the migration script as a module:
+
+    - On macOS/Linux:
+    ```bash
+    python -m migrations.migrate
+    ```
+
+    - On Windows:
+    ```bash
+    python -m migrations.migrate
+    ```
+The migration runner will:
+
+1) Load all migration classes from the migrations folder.
+2) Apply any pending migrations to the database.
+3) Log the results (skipped, failed, and applied migrations).
+
+---
+
 ## Token Management
 
 ### Debug Option: `.env` File
