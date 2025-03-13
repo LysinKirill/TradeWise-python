@@ -7,19 +7,13 @@ class UserRepository(IUserRepository):
         self.connection_provider = connection_provider
 
     def add_invest_api_key(self, email: str, api_key: str) -> bool:
-        print('repo call')
-        try:
-            with (self.connection_provider.get_connection() as commands):
-                add_key_success = commands.query_single(
-                    '''
-                        update "users" u
-                        set invest_api_key = ?invest_api_key?
-                        where u.email = ?email?
-                        returning true;
-                    ''',
-                    param={"invest_api_key": api_key, "email": email})
-                print('repo success')
-                return add_key_success
-        except Exception as e:
-            print(e)
-            raise e
+        with (self.connection_provider.get_connection() as commands):
+            add_key_success = commands.query_single(
+                '''
+                    update "users" u
+                    set invest_api_key = ?invest_api_key?
+                    where u.email = ?email?
+                    returning true;
+                ''',
+                param={"invest_api_key": api_key, "email": email})
+            return add_key_success

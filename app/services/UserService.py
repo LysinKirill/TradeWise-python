@@ -32,7 +32,6 @@ class UserService(IUserService):
         )
 
     def add_invest_api_key(self, request: AddInvestApiKeyRequestModel.AddInvestApiKeyRequestModel) -> bool:
-        print("service call")
         return self.user_repository.add_invest_api_key(email=request.email, api_key=request.api_key)
 
     @staticmethod
