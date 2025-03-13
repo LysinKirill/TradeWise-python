@@ -16,7 +16,7 @@ The backend includes the following components:
 ### Prerequisites
 
 Ensure you have the following installed on your system:
-- Python 3.9 or higher
+- Python 3.12 or higher
 - `pip` (Python package manager)
 - A gRPC client tool for testing (e.g., Postman, BloomRPC) (optional)
 
@@ -48,13 +48,19 @@ Ensure you have the following installed on your system:
 3. Install project dependencies:
 
     ```bash
-    pip install -r requirements.txt
+   # windows
+   pip install -r requirements.txt
+   ```
+   
+   ```bash
+   # mac
+   pip3 install -r requirements.txt
     ```
 
 4. Regenerate python classes for proto (Optional):
    ```bash
-    python -m grpc_tools.protoc -I=externalClients\TInvestApi\proto --python_out=externalClients\TInvestApi\proto --grpc_python_out=externalClients\TInvestApi\proto externalClients\TInvestApi\proto\*.proto
-    python -m grpc_tools.protoc -I=app\proto --python_out=app\proto --grpc_python_out=app\proto app\proto\*.proto
+    python3 -m grpc_tools.protoc -I=externalClients/TInvestApi/proto --python_out=externalClients/TInvestApi/proto --grpc_python_out=externalClients/TInvestApi/proto externalClients/TInvestApi/proto/*.proto
+    python3 -m grpc_tools.protoc -I=app/proto --python_out=app/proto --grpc_python_out=app/proto app/proto/*.proto
    ```
    ```bash
     python -m postProcessing.Processor
@@ -100,7 +106,7 @@ To apply database migrations, follow these steps:
 
     - On macOS/Linux:
     ```bash
-    python -m migrations.migrate
+    python3 -m migrations.migrate
     ```
 
     - On Windows:

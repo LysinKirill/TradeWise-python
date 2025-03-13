@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 from dependency_injector import containers, providers
 
+from app.interceptors.ContextInterceptor import ContextInterceptor
 from app.proto import (
     hello_pb2_grpc,
     user_pb2_grpc
@@ -13,6 +14,10 @@ from app.grpcServices.HelloGrpcService import HelloGrpcService
 from app.grpcServices.UserGrpcService import UserGrpcService
 from app.services.HelloService import HelloService
 from app.services.UserService import UserService
+from app.services.ClaimValuesService import ClaimValuesService
+from app.infrastructure.GrpcContextAccessor import GrpcContextAccessor
+from dataAccess.UserRepository import UserRepository
+from dataAccess.PgConnectionProvider import PgConnectionProvider
 from externalClients.TInvestApi.handlers.UserClient import UserClient
 
 
@@ -29,6 +34,28 @@ class Container(containers.DeclarativeContainer):
 
     t_api_token = config.INVEST_TOKEN
     t_api_endpoint = config.TINKOFF_API_PROD
+    jwt_secret = config.JWT_SECRET
+
+    context_accessor = providers.Singleton(GrpcContextAccessor)
+    claim_values_service = providers.Singleton(
+        ClaimValuesService,
+        context_accessor=context_accessor,
+        jwt_secret=jwt_secret,
+    )
+
+    pg_connection_provider = providers.Singleton(
+        PgConnectionProvider,
+        username='postgres',
+        password='postgres',
+        host='localhost',
+        port=5432,
+        db='python-db'
+    )
+
+    user_repository = providers.Factory(
+        UserRepository,
+        connection_provider=pg_connection_provider
+    )
 
     hello_service = providers.Singleton(HelloService)
     hello_grpc_service = providers.Factory(
@@ -43,30 +70,39 @@ class Container(containers.DeclarativeContainer):
     )
     user_service = providers.Factory(
         UserService,
-        user_client=user_client
+        user_client=user_client,
+        user_repository=user_repository
     )
     user_grpc_service = providers.Factory(
         UserGrpcService,
-        user_service=user_service
+        user_service=user_service,
+        claim_values_service=claim_values_service
     )
-
-
 
 
 def serve():
     load_dotenv()
 
     access_token = os.environ.get("INVEST_TOKEN")
+    jwt_secret = os.environ.get("JWT_SECRET")
     if not access_token:
         raise ValueError("Environment variable INVEST_TOKEN is not set!")
+    if not jwt_secret:
+        raise ValueError("Environment variable JWT_SECRET is not set!")
 
     container = Container()
     container.config.override({
         'INVEST_TOKEN': access_token,
-        'TINKOFF_API_PROD': TINKOFF_API_PROD
+        'TINKOFF_API_PROD': TINKOFF_API_PROD,
+        'JWT_SECRET': jwt_secret,
     })
 
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    context_interceptor = ContextInterceptor(container.context_accessor())
+
+    server = grpc.server(
+        futures.ThreadPoolExecutor(max_workers=10),
+        interceptors=(context_interceptor,)
+    )
 
     register_grpc_services(container, server)
 

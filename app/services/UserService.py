@@ -1,7 +1,13 @@
-from app.domain.models.user.requests.GetAccountsRequestModel import GetAccountsRequestModel
 from app.domain.models.user.responses.GetAccountsResponseModel import GetAccountsResponseModel
 from app.domain.services.IUserService import IUserService
+from dataAccess.interfaces.IUserRepository import IUserRepository
+
 from externalClients.TInvestApi.handlers.UserClient import UserClient
+
+from app.domain.models.user.requests import (
+    AddInvestApiKeyRequestModel,
+    GetAccountsRequestModel
+)
 from app.domain.models.user import (
     AccountTypeModel,
     AccountInfoModel,
@@ -11,14 +17,22 @@ from app.domain.models.user import (
 
 
 class UserService(IUserService):
-    def __init__(self, user_client: UserClient):
+    def __init__(
+            self,
+            user_client: UserClient,
+            user_repository: IUserRepository
+    ):
         self.user_client = user_client
+        self.user_repository = user_repository
 
-    def get_accounts(self, request: GetAccountsRequestModel) -> GetAccountsResponseModel:
+    def get_accounts(self, request: GetAccountsRequestModel.GetAccountsRequestModel) -> GetAccountsResponseModel:
         client_response = self.user_client.get_accounts(request.status)
         return GetAccountsResponseModel(
             accounts=list(map(UserService.__get_account, client_response.accounts))
         )
+
+    def add_invest_api_key(self, request: AddInvestApiKeyRequestModel.AddInvestApiKeyRequestModel) -> bool:
+        return self.user_repository.add_invest_api_key(email=request.email, api_key=request.api_key)
 
     @staticmethod
     def __get_account(client_account) -> AccountInfoModel.AccountInfoModel:
