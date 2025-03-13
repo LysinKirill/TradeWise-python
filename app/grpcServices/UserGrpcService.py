@@ -30,7 +30,7 @@ class UserGrpcService(user_pb2_grpc.UserServiceServicer):
         return user_pb2.GetAccountsResponse(accounts=
         [user_pb2.AccountInfo(id=account.id, name=account.name) for account in response.accounts])
 
-    #@exception_logging
+    @exception_logging
     @request_response_logging()
     def AddInvestApiKey(self, request, context):
         email = self.claim_values_service.get_email()
