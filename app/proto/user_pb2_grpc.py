@@ -3,6 +3,7 @@
 import grpc
 import warnings
 
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 from app.proto import user_pb2 as user__pb2
 
 GRPC_GENERATED_VERSION = '1.69.0'
@@ -39,12 +40,23 @@ class UserServiceStub(object):
                 request_serializer=user__pb2.GetAccountsRequest.SerializeToString,
                 response_deserializer=user__pb2.GetAccountsResponse.FromString,
                 _registered_method=True)
+        self.AddInvestApiKey = channel.unary_unary(
+                '/user.UserService/AddInvestApiKey',
+                request_serializer=user__pb2.AddInvestApiKeyRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
 
 
 class UserServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def GetAccounts(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def AddInvestApiKey(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -57,6 +69,11 @@ def add_UserServiceServicer_to_server(servicer, server):
                     servicer.GetAccounts,
                     request_deserializer=user__pb2.GetAccountsRequest.FromString,
                     response_serializer=user__pb2.GetAccountsResponse.SerializeToString,
+            ),
+            'AddInvestApiKey': grpc.unary_unary_rpc_method_handler(
+                    servicer.AddInvestApiKey,
+                    request_deserializer=user__pb2.AddInvestApiKeyRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -86,6 +103,33 @@ class UserService(object):
             '/user.UserService/GetAccounts',
             user__pb2.GetAccountsRequest.SerializeToString,
             user__pb2.GetAccountsResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def AddInvestApiKey(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/user.UserService/AddInvestApiKey',
+            user__pb2.AddInvestApiKeyRequest.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
             channel_credentials,
             insecure,

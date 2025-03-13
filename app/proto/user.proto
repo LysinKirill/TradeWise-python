@@ -2,8 +2,11 @@ syntax = "proto3";
 
 package user;
 
+import "google/protobuf/empty.proto";
+
 service UserService {
   rpc GetAccounts (GetAccountsRequest) returns (GetAccountsResponse);
+  rpc AddInvestApiKey(AddInvestApiKeyRequest) returns (google.protobuf.Empty);
 }
 
 
@@ -13,6 +16,10 @@ message GetAccountsRequest {
 
 message GetAccountsResponse {
   repeated AccountInfo accounts = 1;
+}
+
+message AddInvestApiKeyRequest {
+  string api_key = 1;
 }
 
 message AccountInfo {
