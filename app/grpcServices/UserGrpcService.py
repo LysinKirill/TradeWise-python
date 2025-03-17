@@ -2,6 +2,7 @@ from app.debug.ExceptionLogger import exception_logging
 from app.domain.models.user.requests.AddInvestApiKeyRequestModel import AddInvestApiKeyRequestModel
 from app.domain.models.user.requests.GetAccountsRequestModel import GetAccountsRequestModel
 from app.domain.models.user.AccountStatusModel import AccountStatusModel
+from app.infrastructure.JwtAuthorizationDecorator import jwt_authorization
 from app.infrastructure.RequestResponseLogging import request_response_logging
 from app.proto import user_pb2, user_pb2_grpc
 from google.protobuf import empty_pb2
@@ -22,6 +23,7 @@ class UserGrpcService(user_pb2_grpc.UserServiceServicer):
 
     @exception_logging
     @request_response_logging()
+    @jwt_authorization
     def GetAccounts(self, request, context):
 
         request_model = GetAccountsRequestModel(status=UserGrpcService.__get_account_status(request.account_status))
@@ -32,6 +34,7 @@ class UserGrpcService(user_pb2_grpc.UserServiceServicer):
 
     @exception_logging
     @request_response_logging()
+    @jwt_authorization
     def AddInvestApiKey(self, request, context):
         email = self.claim_values_service.get_email()
         request_model = AddInvestApiKeyRequestModel(api_key=request.api_key, email=email)
