@@ -5,13 +5,13 @@ from externalClients.TInvestApi.proto import users_pb2, users_pb2_grpc
 
 
 class UserClient:
-    def __init__(self, endpoint: str, token: str):
+    def __init__(self, endpoint: str, api_key: str):
         self.channel = grpc.secure_channel(endpoint, grpc.ssl_channel_credentials())
         self.stub = users_pb2_grpc.UsersServiceStub(self.channel)
-        self.token = token
+        self.api_key = api_key
 
     def get_metadata(self):
-        return [('authorization', f'Bearer {self.token}')]
+        return [('authorization', f'Bearer {self.api_key}')]
 
     def get_accounts(self, account_status: AccountStatusModel.AccountStatusModel =
                      AccountStatusModel.AccountStatusModel.ACCOUNT_STATUS_ALL):
