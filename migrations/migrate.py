@@ -23,7 +23,7 @@ def main() -> None:
             user='postgres',
             password='postgres',
             host='localhost',
-            port=5432,
+            port=5433,
             dbname='python-db')) as commands):
         create_version_table_if_not_exists(commands)
         db_version_info = get_version_info(commands)

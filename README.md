@@ -22,7 +22,13 @@ Ensure you have the following installed on your system:
 
 ### Installation
 
-1. Create a virtual environment:
+1. Copy SSL certificates into 'certs' folder:
+   ```
+   certs
+   ├── cert.pem
+   └── key.pem
+   ```
+2. Create a virtual environment:
 
     - On macOS/Linux:
     ```bash
@@ -34,7 +40,7 @@ Ensure you have the following installed on your system:
     python -m venv .venv
     ```
 
-2. Activate the virtual environment:
+3. Activate the virtual environment:
 
     - On Windows:
         ```bash
@@ -45,7 +51,7 @@ Ensure you have the following installed on your system:
         source .venv/bin/activate
         ```
 
-3. Install project dependencies:
+4. Install project dependencies:
 
     ```bash
    # windows
@@ -57,7 +63,7 @@ Ensure you have the following installed on your system:
    pip3 install -r requirements.txt
     ```
 
-4. Regenerate python classes for proto (Optional):
+5. Regenerate python classes for proto (Optional):
    ```bash
     python3 -m grpc_tools.protoc -I=externalClients/TInvestApi/proto --python_out=externalClients/TInvestApi/proto --grpc_python_out=externalClients/TInvestApi/proto externalClients/TInvestApi/proto/*.proto
     python3 -m grpc_tools.protoc -I=app/proto --python_out=app/proto --grpc_python_out=app/proto app/proto/*.proto
@@ -66,7 +72,7 @@ Ensure you have the following installed on your system:
     python -m postProcessing.Processor
    ```
 
-5. Set up your `.env` file (for **debug purposes only**):
+6. Set up your `.env` file (for **debug purposes only**):
     - Create a `.env` file in the root directory of the project.
     - Add the following line to the file, replacing `your_token_here` with your actual token:
       ```
@@ -84,7 +90,7 @@ To start the backend server, follow these steps:
 3. Run the main server script:
 
     ```shell
-    python -m app.server
+    python3 -m app.server
     ```
 
 4. You should see the following output in your console:
