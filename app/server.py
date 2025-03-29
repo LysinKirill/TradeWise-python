@@ -48,7 +48,7 @@ class Container(containers.DeclarativeContainer):
         username='postgres',
         password='postgres',
         host='localhost',
-        port=5432,
+        port=5433,
         db='python-db'
     )
 
@@ -66,7 +66,7 @@ class Container(containers.DeclarativeContainer):
     user_client = providers.Singleton(
         UserClient,
         endpoint=t_api_endpoint,
-        token=t_api_token
+        api_key=t_api_token
     )
     user_service = providers.Factory(
         UserService,
@@ -106,8 +106,22 @@ def serve():
 
     register_grpc_services(container, server)
 
-    server.add_insecure_port(f'{SERVER_HOST}:{SERVER_PORT}')
-    print(f"Starting server on {SERVER_HOST}:{SERVER_PORT}")
+    try:
+        with open('./certs/cert.pem', 'rb') as f:
+            cert = f.read()
+        with open('./certs/key.pem', 'rb') as f:
+            key = f.read()
+
+        server_credentials = grpc.ssl_server_credentials(
+            [(key, cert)]
+        )
+
+        server.add_secure_port(f'{SERVER_HOST}:{SERVER_PORT}', server_credentials)
+        print(f"Server started on {SERVER_HOST}:{SERVER_PORT}")
+
+    except Exception as e:
+        print(f"Failed to start server: {str(e)}")
+        raise
 
     server.start()
     try:
