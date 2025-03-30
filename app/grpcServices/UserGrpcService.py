@@ -38,9 +38,7 @@ class UserGrpcService(user_pb2_grpc.UserServiceServicer):
     def AddInvestApiKey(self, request, context):
         email = self.claim_values_service.get_email()
         request_model = AddInvestApiKeyRequestModel(api_key=request.api_key, email=email)
-        success = self.user_service.add_invest_api_key(request_model)
-        if not success:
-            context.abort(grpc.StatusCode.NOT_FOUND, "User with given email not found")
+        self.user_service.add_invest_api_key(request_model)
         return empty_pb2.Empty()
 
     @staticmethod
