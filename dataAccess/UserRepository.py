@@ -8,12 +8,12 @@ class UserRepository(IUserRepository):
 
     def add_invest_api_key(self, email: str, api_key: str) -> bool:
         with (self.connection_provider.get_connection() as commands):
-            add_key_success = commands.query_single(
+            add_key_success = commands.execute(
                 '''
-                    update "users" u
-                    set invest_api_key = ?invest_api_key?
-                    where u.email = ?email?
-                    returning true;
+                INSERT INTO "users" (email, invest_api_key)
+                VALUES (?email?, ?invest_api_key?)
+                ON CONFLICT (email) 
+                DO UPDATE SET  invest_api_key = ?invest_api_key?;
                 ''',
                 param={"invest_api_key": api_key, "email": email})
             return add_key_success
