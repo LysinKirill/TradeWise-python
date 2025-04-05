@@ -1,5 +1,15 @@
+import sys
+import logging
+
 from functools import wraps
 
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    stream=sys.stdout
+)
+
+logger = logging.getLogger("[RequestResponseLogging]")
 
 def request_response_logging(logger_prompt: str | None = None):
     def add_padding(obj, padding: str) -> str:
@@ -13,10 +23,10 @@ def request_response_logging(logger_prompt: str | None = None):
         @wraps(func)
         def wrapper(self, request, context):
             if logger_prompt is not None:
-                print(logger_prompt)
-            print(f"Request to {func.__name__}: \n{add_padding(request, '    ')}")
+                logger.info(logger_prompt)
+            logger.info(f"Request to {func.__name__}: \n{add_padding(request, '    ')}")
             response = func(self, request, context)
-            print(f"Response from {func.__name__}: \n{add_padding(response, '    ')}")
+            logger.info(f"Response from {func.__name__}: \n{add_padding(response, '    ')}")
 
             return response
         return wrapper

@@ -1,8 +1,18 @@
 import os
+import sys
+import logging
 
 from postProcessing.PostProcessor import PostProcessor
 from postProcessing.RunResult import RunResult
 
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    stream=sys.stdout
+)
+
+logger = logging.getLogger("[RequestResponseLogging]")
 
 class ProtoProcessorBase(PostProcessor):
     def __init__(self,
@@ -17,7 +27,7 @@ class ProtoProcessorBase(PostProcessor):
     # noinspection PyBroadException
     def perform_post_process(self) -> None:
         if self.processor_name is not None:
-            print(f"Running {self.processor_name}...")
+            logger.info(f"Running {self.processor_name}...")
 
         try:
             self.__perform_post_process_internal()
@@ -58,7 +68,7 @@ class ProtoProcessorBase(PostProcessor):
                     f.write(content)
                     processed_files.append(file)
 
-        print(f'''  processed: {processed_files}
+        logger.info(f'''  processed: {processed_files}
     skipped: {skipped_files}
     ignored: {ignored_files}''')
 
@@ -74,5 +84,5 @@ class ProtoProcessorBase(PostProcessor):
 
     def log_result(self, run_result: RunResult):
         result_processor_name = self.processor_name if self.processor_name is not None else "Processor"
-        print(f"{result_processor_name} run result: {run_result}\n")
+        logger.info(f"{result_processor_name} run result: {run_result}\n")
 
