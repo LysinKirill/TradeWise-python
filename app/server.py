@@ -32,7 +32,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 SECONDS_IN_DAY = 86400
-SERVER_HOST = 'localhost'
 SERVER_PORT = 50051
 
 TINKOFF_API_PROD = 'invest-public-api.tinkoff.ru:443'
@@ -127,9 +126,8 @@ def serve():
             [(key, cert)]
         )
 
-        logger.info("Add secure port")
-        server.add_secure_port(f'{SERVER_HOST}:{SERVER_PORT}', server_credentials)
-        logger.info(f"Server started on {SERVER_HOST}:{SERVER_PORT}")
+        server.add_secure_port(f'[::]:{SERVER_PORT}', server_credentials)
+        logger.info(f"Server started on [::]:{SERVER_PORT}")
 
     except Exception as e:
         logger.info(f"Failed to start server: {str(e)}")
