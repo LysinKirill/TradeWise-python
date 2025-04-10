@@ -4,6 +4,9 @@ import time
 import os
 from dotenv import load_dotenv
 from dependency_injector import containers, providers
+import logging
+import sys
+
 
 import invest_pb2_grpc
 from app.grpcServices.InvestGrpcService import InvestGrpcService
@@ -24,13 +27,20 @@ from dataAccess.PgConnectionProvider import PgConnectionProvider
 from externalClients.TInvestApi.handlers.InstrumentsClient import InstrumentsClient
 from externalClients.TInvestApi.handlers.UserClient import UserClient
 
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    stream=sys.stdout
+)
+
+logger = logging.getLogger(__name__)
 
 SECONDS_IN_DAY = 86400
-SERVER_HOST = 'localhost'
 SERVER_PORT = 50051
 
 TINKOFF_API_PROD = 'invest-public-api.tinkoff.ru:443'
 TINKOFF_API_SANDBOX = 'sandbox-invest-public-api.tinkoff.ru:443'
+
 
 
 class Container(containers.DeclarativeContainer):
@@ -46,13 +56,13 @@ class Container(containers.DeclarativeContainer):
         context_accessor=context_accessor,
         jwt_secret=jwt_secret,
     )
-
+    logger.info("1111")
     pg_connection_provider = providers.Singleton(
         PgConnectionProvider,
         username='postgres',
         password='postgres',
-        host='localhost',
-        port=5433,
+        host='python-db',
+        port=5432,
         db='python-db'
     )
 
@@ -134,11 +144,11 @@ def serve():
             [(key, cert)]
         )
 
-        server.add_secure_port(f'{SERVER_HOST}:{SERVER_PORT}', server_credentials)
-        print(f"Server started on {SERVER_HOST}:{SERVER_PORT}")
+        server.add_secure_port(f'[::]:{SERVER_PORT}', server_credentials)
+        logger.info(f"Server started on [::]:{SERVER_PORT}")
 
     except Exception as e:
-        print(f"Failed to start server: {str(e)}")
+        logger.info(f"Failed to start server: {str(e)}")
         raise
 
     server.start()
@@ -146,7 +156,7 @@ def serve():
         while True:
             time.sleep(SECONDS_IN_DAY)
     except KeyboardInterrupt:
-        print("Stopping server...")
+        logger.info("Stopping server...")
         server.stop(0)
 
 
