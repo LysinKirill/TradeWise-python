@@ -26,7 +26,7 @@ if _version_not_supported:
 
 
 class SignalServiceStub(object):
-    """Сервис для получения технических сигналов и мнений аналитиков по инструментам
+    """Сервис для получения технических сигналов и мнений аналитиков по инструментам.
     """
 
     def __init__(self, channel):
@@ -48,18 +48,18 @@ class SignalServiceStub(object):
 
 
 class SignalServiceServicer(object):
-    """Сервис для получения технических сигналов и мнений аналитиков по инструментам
+    """Сервис для получения технических сигналов и мнений аналитиков по инструментам.
     """
 
     def GetStrategies(self, request, context):
-        """Запросить стратегии.
+        """GetStrategies — стратегии
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def GetSignals(self, request, context):
-        """Запросить сигналы.
+        """GetSignals — сигналы
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -87,7 +87,7 @@ def add_SignalServiceServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class SignalService(object):
-    """Сервис для получения технических сигналов и мнений аналитиков по инструментам
+    """Сервис для получения технических сигналов и мнений аналитиков по инструментам.
     """
 
     @staticmethod
