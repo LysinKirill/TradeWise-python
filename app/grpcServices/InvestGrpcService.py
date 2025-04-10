@@ -19,22 +19,21 @@ class InvestGrpcService(invest_pb2_grpc.InvestServiceServicer):
     @request_response_logging()
     @jwt_authorization
     def GetSupportedInstruments(self, request, context):
-        response = self.user_service.get_accounts()
-
+        response = self.invest_service.get_supported_instruments()
         return invest_pb2.GetSupportedInstrumentsResponse(instruments=
-        [UserGrpcService.__get_instrument_from_model(instrument) for instrument in response.instruments])
+        [InvestGrpcService.__get_instrument_from_model(instrument) for instrument in response.instruments])
 
 
     @staticmethod
     def __get_instrument_from_model(instrument: InstrumentModel.InstrumentModel):
         return invest_pb2.InstrumentInfo(
             id=instrument.id,
-            figi=instrument.figi,
+            figi={"value" : instrument.figi},
             name=instrument.name,
             lot=instrument.lot,
             currency=instrument.currency,
             sector=instrument.sector,
             buy_available=instrument.buy_available,
             sell_available=instrument.sell_available,
-            risk_level=invest_pb2.RiskLevel(instrument.risk_level),
+            risk_level=getattr(invest_pb2.RiskLevel, instrument.risk_level.name),
         )

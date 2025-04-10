@@ -8,12 +8,12 @@ import logging
 import sys
 
 
-import invest_pb2_grpc
 from app.grpcServices.InvestGrpcService import InvestGrpcService
 from app.interceptors.ContextInterceptor import ContextInterceptor
 from app.proto import (
     hello_pb2_grpc,
-    user_pb2_grpc
+    user_pb2_grpc,
+    invest_pb2_grpc
 )
 from app.grpcServices.HelloGrpcService import HelloGrpcService
 from app.grpcServices.UserGrpcService import UserGrpcService
@@ -56,7 +56,7 @@ class Container(containers.DeclarativeContainer):
         context_accessor=context_accessor,
         jwt_secret=jwt_secret,
     )
-    logger.info("1111")
+
     pg_connection_provider = providers.Singleton(
         PgConnectionProvider,
         username='postgres',

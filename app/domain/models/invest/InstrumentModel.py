@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from RiskLevelModel import RiskLevelModel
+from . import RiskLevelModel
 
 @dataclass(frozen=True)
 class InstrumentModel:

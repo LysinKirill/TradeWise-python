@@ -1,5 +1,16 @@
 from functools import wraps
 import grpc
+import logging
+import sys
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    stream=sys.stdout
+)
+
+logger = logging.getLogger("[Authorization]")
 
 
 def jwt_authorization(func):
@@ -21,7 +32,8 @@ def jwt_authorization(func):
             return func(self, request, context)
         except grpc.RpcError:
             raise
-        except Exception:
+        except Exception as e:
+            logger.error(e)
             if context.code() != grpc.StatusCode.UNAUTHENTICATED:
                 context.abort(grpc.StatusCode.UNAUTHENTICATED, f"Authorization failed")
             raise grpc.RpcError()

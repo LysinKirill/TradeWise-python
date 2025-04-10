@@ -12,11 +12,16 @@ class InstrumentsClient:
     def get_metadata(self):
         return [('authorization', f'Bearer {self.api_key}')]
 
-    def get_instruments(self):
-        request = instruments_pb2.InstrumentsRequest()
-        response = self.stub.Bonds(request, metadata=self.get_metadata())
-
-        return response
+    def get_instruments(self, instrument_ids: list[str]):
+        instruments = []
+        for instrument_id in instrument_ids:
+            request = instruments_pb2.InstrumentRequest(
+                id_type = instruments_pb2.InstrumentIdType.Value("INSTRUMENT_ID_TYPE_UID"),
+                id = instrument_id
+            )
+            response = self.stub.BondBy(request, metadata=self.get_metadata())
+            instruments.append(response.instrument)
+        return instruments
 
     def close(self):
         self.channel.close()
