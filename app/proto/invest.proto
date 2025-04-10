@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package user;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+
+service InvestService {
+  rpc GetSupportedInstruments(google.protobuf.Empty) returns (GetSupportedInstrumentsResponse) {}
+}
+
+message GetSupportedInstrumentsResponse {
+  repeated InstrumentInfo instruments = 1;
+}
+
+message InstrumentInfo {
+  string id = 1;
+  google.protobuf.StringValue figi = 2;
+  string name = 3;
+  int32 lot = 4;
+  string currency = 5;
+  string sector = 6;
+  bool buy_available = 7;
+  bool sell_available = 8;
+  RiskLevel risk_level = 9;
+}
+
+enum RiskLevel {
+  RISK_LEVEL_UNSPECIFIED = 0;
+  RISK_LEVEL_LOW = 1;
+  RISK_LEVEL_MODERATE = 2;
+  RISK_LEVEL_HIGH = 3;
+}
+
+
