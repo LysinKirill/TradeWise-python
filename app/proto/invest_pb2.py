@@ -26,19 +26,19 @@ from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 from google.protobuf import wrappers_pb2 as google_dot_protobuf_dot_wrappers__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0cinvest.proto\x12\x04user\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1egoogle/protobuf/wrappers.proto\"L\n\x1fGetSupportedInstrumentsResponse\x12)\n\x0binstruments\x18\x01 \x03(\x0b\x32\x14.user.InstrumentInfo\"\xd9\x01\n\x0eInstrumentInfo\x12\n\n\x02id\x18\x01 \x01(\t\x12*\n\x04\x66igi\x18\x02 \x01(\x0b\x32\x1c.google.protobuf.StringValue\x12\x0c\n\x04name\x18\x03 \x01(\t\x12\x0b\n\x03lot\x18\x04 \x01(\x05\x12\x10\n\x08\x63urrency\x18\x05 \x01(\t\x12\x0e\n\x06sector\x18\x06 \x01(\t\x12\x15\n\rbuy_available\x18\x07 \x01(\x08\x12\x16\n\x0esell_available\x18\x08 \x01(\x08\x12#\n\nrisk_level\x18\t \x01(\x0e\x32\x0f.user.RiskLevel*i\n\tRiskLevel\x12\x1a\n\x16RISK_LEVEL_UNSPECIFIED\x10\x00\x12\x12\n\x0eRISK_LEVEL_LOW\x10\x01\x12\x17\n\x13RISK_LEVEL_MODERATE\x10\x02\x12\x13\n\x0fRISK_LEVEL_HIGH\x10\x03\x32k\n\rInvestService\x12Z\n\x17GetSupportedInstruments\x12\x16.google.protobuf.Empty\x1a%.user.GetSupportedInstrumentsResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0cinvest.proto\x12\x04user\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1egoogle/protobuf/wrappers.proto\"L\n\x1fGetSupportedInstrumentsResponse\x12)\n\x0binstruments\x18\x01 \x03(\x0b\x32\x14.user.InstrumentInfo\"\xb4\x01\n\x0eInstrumentInfo\x12\n\n\x02id\x18\x01 \x01(\t\x12*\n\x04\x66igi\x18\x02 \x01(\x0b\x32\x1c.google.protobuf.StringValue\x12\x0c\n\x04name\x18\x03 \x01(\t\x12\x0b\n\x03lot\x18\x04 \x01(\x05\x12\x10\n\x08\x63urrency\x18\x05 \x01(\t\x12\x0e\n\x06sector\x18\x06 \x01(\t\x12\x15\n\rbuy_available\x18\x07 \x01(\x08\x12\x16\n\x0esell_available\x18\x08 \x01(\x08*i\n\tRiskLevel\x12\x1a\n\x16RISK_LEVEL_UNSPECIFIED\x10\x00\x12\x12\n\x0eRISK_LEVEL_LOW\x10\x01\x12\x17\n\x13RISK_LEVEL_MODERATE\x10\x02\x12\x13\n\x0fRISK_LEVEL_HIGH\x10\x03\x32k\n\rInvestService\x12Z\n\x17GetSupportedInstruments\x12\x16.google.protobuf.Empty\x1a%.user.GetSupportedInstrumentsResponse\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'invest_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_RISKLEVEL']._serialized_start=381
-  _globals['_RISKLEVEL']._serialized_end=486
+  _globals['_RISKLEVEL']._serialized_start=344
+  _globals['_RISKLEVEL']._serialized_end=449
   _globals['_GETSUPPORTEDINSTRUMENTSRESPONSE']._serialized_start=83
   _globals['_GETSUPPORTEDINSTRUMENTSRESPONSE']._serialized_end=159
   _globals['_INSTRUMENTINFO']._serialized_start=162
-  _globals['_INSTRUMENTINFO']._serialized_end=379
-  _globals['_INVESTSERVICE']._serialized_start=488
-  _globals['_INVESTSERVICE']._serialized_end=595
+  _globals['_INSTRUMENTINFO']._serialized_end=342
+  _globals['_INVESTSERVICE']._serialized_start=451
+  _globals['_INVESTSERVICE']._serialized_end=558
 # @@protoc_insertion_point(module_scope)

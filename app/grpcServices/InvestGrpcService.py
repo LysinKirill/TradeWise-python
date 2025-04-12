@@ -35,5 +35,4 @@ class InvestGrpcService(invest_pb2_grpc.InvestServiceServicer):
             sector=instrument.sector,
             buy_available=instrument.buy_available,
             sell_available=instrument.sell_available,
-            risk_level=getattr(invest_pb2.RiskLevel, instrument.risk_level.name),
         )

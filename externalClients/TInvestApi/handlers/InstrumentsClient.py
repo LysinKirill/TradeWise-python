@@ -19,7 +19,7 @@ class InstrumentsClient:
                 id_type = instruments_pb2.InstrumentIdType.Value("INSTRUMENT_ID_TYPE_UID"),
                 id = instrument_id
             )
-            response = self.stub.BondBy(request, metadata=self.get_metadata())
+            response = self.stub.ShareBy(request, metadata=self.get_metadata())
             instruments.append(response.instrument)
         return instruments
 

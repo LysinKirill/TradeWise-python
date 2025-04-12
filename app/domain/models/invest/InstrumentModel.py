@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from . import RiskLevelModel
 
 @dataclass(frozen=True)
 class InstrumentModel:
@@ -11,4 +10,3 @@ class InstrumentModel:
     sector: str
     buy_available: bool
     sell_available: bool
-    risk_level: RiskLevelModel

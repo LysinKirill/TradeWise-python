@@ -22,7 +22,6 @@ message InstrumentInfo {
   string sector = 6;
   bool buy_available = 7;
   bool sell_available = 8;
-  RiskLevel risk_level = 9;
 }
 
 enum RiskLevel {
