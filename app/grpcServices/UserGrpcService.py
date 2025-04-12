@@ -8,7 +8,6 @@ from app.proto import user_pb2, user_pb2_grpc
 from google.protobuf import empty_pb2
 import app.domain.services.IUserService as IUserService
 import app.domain.services.IClaimValuesService as IClaimValuesService
-import grpc
 
 
 class UserGrpcService(user_pb2_grpc.UserServiceServicer):

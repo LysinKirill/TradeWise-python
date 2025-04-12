@@ -7,20 +7,24 @@ from dependency_injector import containers, providers
 import logging
 import sys
 
-
+from app.configuration import Settings, SupportedInstrumentsOptions
+from app.grpcServices.InvestGrpcService import InvestGrpcService
 from app.interceptors.ContextInterceptor import ContextInterceptor
 from app.proto import (
     hello_pb2_grpc,
-    user_pb2_grpc
+    user_pb2_grpc,
+    invest_pb2_grpc
 )
 from app.grpcServices.HelloGrpcService import HelloGrpcService
 from app.grpcServices.UserGrpcService import UserGrpcService
 from app.services.HelloService import HelloService
+from app.services.InvestService import InvestService
 from app.services.UserService import UserService
 from app.services.ClaimValuesService import ClaimValuesService
 from app.infrastructure.GrpcContextAccessor import GrpcContextAccessor
 from dataAccess.UserRepository import UserRepository
 from dataAccess.PgConnectionProvider import PgConnectionProvider
+from externalClients.TInvestApi.handlers.InstrumentsClient import InstrumentsClient
 from externalClients.TInvestApi.handlers.UserClient import UserClient
 
 logging.basicConfig(
@@ -42,6 +46,13 @@ TINKOFF_API_SANDBOX = 'sandbox-invest-public-api.tinkoff.ru:443'
 class Container(containers.DeclarativeContainer):
     config = providers.Configuration()
 
+    settings = providers.Singleton(Settings.Settings)
+
+    supported_instruments_options = providers.Factory(
+        SupportedInstrumentsOptions.SupportedInstrumentsOptions,
+        settings = settings
+    )
+
     t_api_token = config.INVEST_TOKEN
     t_api_endpoint = config.TINKOFF_API_PROD
     jwt_secret = config.JWT_SECRET
@@ -52,7 +63,7 @@ class Container(containers.DeclarativeContainer):
         context_accessor=context_accessor,
         jwt_secret=jwt_secret,
     )
-    logger.info("1111")
+
     pg_connection_provider = providers.Singleton(
         PgConnectionProvider,
         username='postgres',
@@ -78,14 +89,29 @@ class Container(containers.DeclarativeContainer):
         endpoint=t_api_endpoint,
         api_key=t_api_token
     )
+    instruments_client = providers.Singleton(
+        InstrumentsClient,
+        endpoint=t_api_endpoint,
+        api_key=t_api_token
+    )
     user_service = providers.Factory(
         UserService,
         user_client=user_client,
         user_repository=user_repository
     )
+    invest_service = providers.Factory(
+        InvestService,
+        instruments_client=instruments_client,
+        supported_instruments_options=supported_instruments_options,
+    )
     user_grpc_service = providers.Factory(
         UserGrpcService,
         user_service=user_service,
+        claim_values_service=claim_values_service
+    )
+    invest_grpc_service = providers.Factory(
+        InvestGrpcService,
+        invest_service=invest_service,
         claim_values_service=claim_values_service
     )
 
@@ -147,6 +173,8 @@ def register_grpc_services(container: Container, server: grpc.Server):
     hello_pb2_grpc.add_HelloWorldServicer_to_server(hello_grpc_service, server)
     user_grpc_service = container.user_grpc_service()
     user_pb2_grpc.add_UserServiceServicer_to_server(user_grpc_service, server)
+    invest_grpc_service = container.invest_grpc_service()
+    invest_pb2_grpc.add_InvestServiceServicer_to_server(invest_grpc_service, server)
 
 
 if __name__ == '__main__':

@@ -26,9 +26,9 @@ if _version_not_supported:
 
 
 class OperationsServiceStub(object):
-    """С помощью методов сервиса можно получить:</br></br> **1**. Список операций по счёту.</br> **2**.
-    Портфель по счёту.</br> **3**. Позиции ценных бумаг на счёте.</br> **4**.
-    Доступный остаток для вывода средств.</br> **5**. Различные отчёты.
+    """С помощью методов сервиса можно получить:<br/><br/> **1**. Список операций по счету.<br/> **2**.
+    Портфель по счету.<br/> **3**. Позиции ценных бумаг на счете.<br/> **4**.
+    Доступный остаток для вывода средств.<br/> **5**. Различные отчеты.
     """
 
     def __init__(self, channel):
@@ -75,57 +75,57 @@ class OperationsServiceStub(object):
 
 
 class OperationsServiceServicer(object):
-    """С помощью методов сервиса можно получить:</br></br> **1**. Список операций по счёту.</br> **2**.
-    Портфель по счёту.</br> **3**. Позиции ценных бумаг на счёте.</br> **4**.
-    Доступный остаток для вывода средств.</br> **5**. Различные отчёты.
+    """С помощью методов сервиса можно получить:<br/><br/> **1**. Список операций по счету.<br/> **2**.
+    Портфель по счету.<br/> **3**. Позиции ценных бумаг на счете.<br/> **4**.
+    Доступный остаток для вывода средств.<br/> **5**. Различные отчеты.
     """
 
     def GetOperations(self, request, context):
-        """Получить список операций по счёту. При работе с методом учитывайте
-        [особенности взаимодействия](/investAPI/operations_problems).
+        """GetOperations — список операций по счету
+        При работе с методом учитывайте [особенности взаимодействия](/invest/services/operations/operations_problems).
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def GetPortfolio(self, request, context):
-        """Получить портфель по счёту.
+        """GetPortfolio — портфель по счету
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def GetPositions(self, request, context):
-        """Получить список позиций по счёту.
+        """GetPositions — список позиций по счету
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def GetWithdrawLimits(self, request, context):
-        """Получить доступный остаток для вывода средств.
+        """GetWithdrawLimits — доступный остаток для вывода средств
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def GetBrokerReport(self, request, context):
-        """Получить брокерский отчёт.
+        """GetBrokerReport — брокерский отчет.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def GetDividendsForeignIssuer(self, request, context):
-        """Получить отчёт «Справка о доходах за пределами РФ».
+        """GetDividendsForeignIssuer — отчет «Справка о доходах за пределами РФ»
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def GetOperationsByCursor(self, request, context):
-        """Получить список операций по счёту с пагинацией. При работе с методом учитывайте
-        [особенности взаимодействия](/investAPI/operations_problems).
+        """GetOperationsByCursor — список операций по счету с пагинацией
+        При работе с методом учитывайте [особенности взаимодействия](/invest/services/operations/operations_problems).
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -178,9 +178,9 @@ def add_OperationsServiceServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class OperationsService(object):
-    """С помощью методов сервиса можно получить:</br></br> **1**. Список операций по счёту.</br> **2**.
-    Портфель по счёту.</br> **3**. Позиции ценных бумаг на счёте.</br> **4**.
-    Доступный остаток для вывода средств.</br> **5**. Различные отчёты.
+    """С помощью методов сервиса можно получить:<br/><br/> **1**. Список операций по счету.<br/> **2**.
+    Портфель по счету.<br/> **3**. Позиции ценных бумаг на счете.<br/> **4**.
+    Доступный остаток для вывода средств.<br/> **5**. Различные отчеты.
     """
 
     @staticmethod
@@ -398,14 +398,14 @@ class OperationsStreamServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def PortfolioStream(self, request, context):
-        """Server-side stream обновлений портфеля.
+        """PortfolioStream — стрим обновлений портфеля
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def PositionsStream(self, request, context):
-        """Server-side stream обновлений информации по изменению позиций портфеля.
+        """PositionsStream — стрим обновлений информации по изменению позиций портфеля
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
