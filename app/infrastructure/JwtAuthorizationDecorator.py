@@ -30,7 +30,8 @@ def jwt_authorization(func):
                 return
 
             return func(self, request, context)
-        except grpc.RpcError:
+        except grpc.RpcError as e:
+            logger.error(f"[RPC ERROR]: {e}")
             raise
         except Exception as e:
             logger.error(e)

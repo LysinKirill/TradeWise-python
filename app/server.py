@@ -7,7 +7,7 @@ from dependency_injector import containers, providers
 import logging
 import sys
 
-
+from app.configuration import Settings, SupportedInstrumentsOptions
 from app.grpcServices.InvestGrpcService import InvestGrpcService
 from app.interceptors.ContextInterceptor import ContextInterceptor
 from app.proto import (
@@ -45,6 +45,13 @@ TINKOFF_API_SANDBOX = 'sandbox-invest-public-api.tinkoff.ru:443'
 
 class Container(containers.DeclarativeContainer):
     config = providers.Configuration()
+
+    settings = providers.Singleton(Settings.Settings)
+
+    supported_instruments_options = providers.Factory(
+        SupportedInstrumentsOptions.SupportedInstrumentsOptions,
+        settings = settings
+    )
 
     t_api_token = config.INVEST_TOKEN
     t_api_endpoint = config.TINKOFF_API_PROD
@@ -95,6 +102,7 @@ class Container(containers.DeclarativeContainer):
     invest_service = providers.Factory(
         InvestService,
         instruments_client=instruments_client,
+        supported_instruments_options=supported_instruments_options,
     )
     user_grpc_service = providers.Factory(
         UserGrpcService,

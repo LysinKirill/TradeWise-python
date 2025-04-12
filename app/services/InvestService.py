@@ -1,3 +1,4 @@
+from app.configuration.SupportedInstrumentsOptions import SupportedInstrumentsOptions
 from app.domain.models.invest.InstrumentModel import InstrumentModel
 from app.domain.models.invest.responses.GetSupportedInstrumentsResponseModel import GetSupportedInstrumentsResponseModel
 from app.domain.services.IInvestService import IInvestService
@@ -8,18 +9,14 @@ from externalClients.TInvestApi.handlers.InstrumentsClient import InstrumentsCli
 class InvestService(IInvestService):
     def __init__(
         self,
-        instruments_client: InstrumentsClient
+        instruments_client: InstrumentsClient,
+        supported_instruments_options: SupportedInstrumentsOptions
     ):
         self.instruments_client = instruments_client
+        self.supported_instruments_options = supported_instruments_options
 
     def get_supported_instruments(self) -> GetSupportedInstrumentsResponseModel:
-        supported_instruments_ids = [
-            'e6123145-9665-43e0-8413-cd61b8aa9b13',
-            '962e2a95-02a9-4171-abd7-aa198dbe643a',
-            '509edd0c-129c-4ee2-934d-7f6246126da1',
-            '7de75794-a27f-4d81-a39b-492345813822',
-            '02cfdf61-6298-4c0f-a9ca-9cabc82afaf3'
-        ]
+        supported_instruments_ids = self.supported_instruments_options.shares
         client_response_instruments = self.instruments_client.get_instruments(supported_instruments_ids)
         return GetSupportedInstrumentsResponseModel(
             instruments=list(map(InvestService.__get_instrument, client_response_instruments))
