@@ -1,16 +1,14 @@
-import grpc
+from externalClients.TInvestApi.handlers.BaseClient import BaseClient
+from externalClients.TInvestApi.proto import (
+    instruments_pb2, instruments_pb2_grpc,
+)
 
-from externalClients.TInvestApi.proto import instruments_pb2, instruments_pb2_grpc
 
-
-class InstrumentsClient:
+class InstrumentsClient(BaseClient):
     def __init__(self, endpoint: str, api_key: str):
-        self.channel = grpc.secure_channel(endpoint, grpc.ssl_channel_credentials())
+        super().__init__(endpoint, api_key)
         self.stub = instruments_pb2_grpc.InstrumentsServiceStub(self.channel)
-        self.api_key = api_key
 
-    def get_metadata(self):
-        return [('authorization', f'Bearer {self.api_key}')]
 
     def get_instruments(self, instrument_ids: list[str]):
         instruments = []
@@ -22,6 +20,3 @@ class InstrumentsClient:
             response = self.stub.ShareBy(request, metadata=self.get_metadata())
             instruments.append(response.instrument)
         return instruments
-
-    def close(self):
-        self.channel.close()

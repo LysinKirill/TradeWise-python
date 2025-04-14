@@ -1,17 +1,12 @@
-import grpc
-
 from app.domain.models.user import AccountStatusModel
+from externalClients.TInvestApi.handlers.BaseClient import BaseClient
 from externalClients.TInvestApi.proto import users_pb2, users_pb2_grpc
 
 
-class UserClient:
+class UserClient(BaseClient):
     def __init__(self, endpoint: str, api_key: str):
-        self.channel = grpc.secure_channel(endpoint, grpc.ssl_channel_credentials())
+        super().__init__(endpoint, api_key)
         self.stub = users_pb2_grpc.UsersServiceStub(self.channel)
-        self.api_key = api_key
-
-    def get_metadata(self):
-        return [('authorization', f'Bearer {self.api_key}')]
 
     def get_accounts(self, account_status: AccountStatusModel.AccountStatusModel =
                      AccountStatusModel.AccountStatusModel.ACCOUNT_STATUS_ALL):
@@ -20,8 +15,6 @@ class UserClient:
 
         return response
 
-    def close(self):
-        self.channel.close()
 
     @staticmethod
     def __get_client_account_status(account_status: AccountStatusModel.AccountStatusModel) -> users_pb2.AccountStatus:
