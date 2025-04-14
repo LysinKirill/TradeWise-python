@@ -8,7 +8,7 @@ import "google/protobuf/timestamp.proto";
 
 service InvestService {
   rpc GetSupportedInstruments(google.protobuf.Empty) returns (GetSupportedInstrumentsResponse) {}
-  rpc GetInstrumentStats(GetInstrumentStatRequest) returns (GetInstrumentStatResponse) {}
+  rpc GetInstrumentStat(GetInstrumentStatRequest) returns (GetInstrumentStatResponse) {}
 }
 
 
