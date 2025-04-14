@@ -4,9 +4,23 @@ package user;
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/wrappers.proto";
+import "google/protobuf/timestamp.proto";
 
 service InvestService {
   rpc GetSupportedInstruments(google.protobuf.Empty) returns (GetSupportedInstrumentsResponse) {}
+  rpc GetInstrumentStats(GetInstrumentStatRequest) returns (GetInstrumentStatResponse) {}
+}
+
+
+message GetInstrumentStatRequest {
+  string instrument_id = 1;
+  StatType stat_type = 2;
+  google.protobuf.Timestamp from = 3; // defaults to now()
+  google.protobuf.Timestamp to = 4;   // defaults to now() - 5 min
+}
+
+message GetInstrumentStatResponse {
+  double stat_value = 1;
 }
 
 message GetSupportedInstrumentsResponse {
@@ -24,11 +38,12 @@ message InstrumentInfo {
   bool sell_available = 8;
 }
 
-enum RiskLevel {
-  RISK_LEVEL_UNSPECIFIED = 0;
-  RISK_LEVEL_LOW = 1;
-  RISK_LEVEL_MODERATE = 2;
-  RISK_LEVEL_HIGH = 3;
+enum StatType {
+    StatType_Unknown = 0;
+    StatType_BollingerBands = 1;
+    StatType_ExponentialMovingAverage = 2;
+    StatType_RelativeStrengthIndex = 3;
+    StatType_MovingAverageConvergenceDivergence = 4;
+    StatType_MovingAverage = 5;
 }
-
 
