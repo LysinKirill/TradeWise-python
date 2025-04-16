@@ -1,5 +1,7 @@
 from app.debug.ExceptionLogger import exception_logging
 from app.domain.models.invest import InstrumentModel
+from app.domain.models.invest.InstrumentStatType import InstrumentStatType
+from app.domain.models.invest.requests.GetInstrumentStatRequestModel import GetInstrumentStatRequestModel
 from app.domain.services.IInvestService import IInvestService
 from app.infrastructure.JwtAuthorizationDecorator import jwt_authorization
 from app.infrastructure.RequestResponseLogging import request_response_logging
@@ -23,6 +25,16 @@ class InvestGrpcService(invest_pb2_grpc.InvestServiceServicer):
         return invest_pb2.GetSupportedInstrumentsResponse(instruments=
         [InvestGrpcService.__get_instrument_from_model(instrument) for instrument in response.instruments])
 
+
+    def GetInstrumentStat(self, request, context):
+        request_model = GetInstrumentStatRequestModel(
+            instrument_id=request.instrument_id,
+            stat_type=InstrumentStatType(request.stat_type),
+            from_=getattr(request, "from").ToDatetime() if request.HasField("from") else None,
+            to=request.to.ToDatetime() if request.HasField("to") else None,
+        )
+        response = self.invest_service.get_instrument_stat(request_model)
+        return invest_pb2.GetInstrumentStatResponse(stat_value=response.stat_value)
 
     @staticmethod
     def __get_instrument_from_model(instrument: InstrumentModel.InstrumentModel):

@@ -40,8 +40,8 @@ class InvestServiceStub(object):
                 request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
                 response_deserializer=invest__pb2.GetSupportedInstrumentsResponse.FromString,
                 _registered_method=True)
-        self.GetInstrumentStats = channel.unary_unary(
-                '/user.InvestService/GetInstrumentStats',
+        self.GetInstrumentStat = channel.unary_unary(
+                '/user.InvestService/GetInstrumentStat',
                 request_serializer=invest__pb2.GetInstrumentStatRequest.SerializeToString,
                 response_deserializer=invest__pb2.GetInstrumentStatResponse.FromString,
                 _registered_method=True)
@@ -56,7 +56,7 @@ class InvestServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def GetInstrumentStats(self, request, context):
+    def GetInstrumentStat(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -70,8 +70,8 @@ def add_InvestServiceServicer_to_server(servicer, server):
                     request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                     response_serializer=invest__pb2.GetSupportedInstrumentsResponse.SerializeToString,
             ),
-            'GetInstrumentStats': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetInstrumentStats,
+            'GetInstrumentStat': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetInstrumentStat,
                     request_deserializer=invest__pb2.GetInstrumentStatRequest.FromString,
                     response_serializer=invest__pb2.GetInstrumentStatResponse.SerializeToString,
             ),
@@ -114,7 +114,7 @@ class InvestService(object):
             _registered_method=True)
 
     @staticmethod
-    def GetInstrumentStats(request,
+    def GetInstrumentStat(request,
             target,
             options=(),
             channel_credentials=None,
@@ -127,7 +127,7 @@ class InvestService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/user.InvestService/GetInstrumentStats',
+            '/user.InvestService/GetInstrumentStat',
             invest__pb2.GetInstrumentStatRequest.SerializeToString,
             invest__pb2.GetInstrumentStatResponse.FromString,
             options,
