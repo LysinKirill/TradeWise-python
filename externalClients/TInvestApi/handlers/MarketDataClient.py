@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
+import grpc
+
 from app.domain.models.invest.InstrumentStatType import InstrumentStatType
 from app.domain.models.invest.requests import GetInstrumentStatRequestModel
 from externalClients.TInvestApi.handlers.BaseClient import BaseClient
@@ -35,8 +37,10 @@ class MarketDataClient(BaseClient):
             length=5
         )
         setattr(invest_api_request, "from", datetime_from)
-
-        invest_api_response = self.stub.GetTechAnalysis(invest_api_request, metadata=self.get_metadata())
+        try:
+            invest_api_response = self.stub.GetTechAnalysis(invest_api_request, metadata=self.get_metadata())
+        except grpc.RpcError:
+            return None
 
         technical_indicators = invest_api_response.technical_indicators
         if not technical_indicators:
