@@ -40,10 +40,12 @@ message InstrumentInfo {
 
 enum StatType {
     StatType_Unknown = 0;
-    StatType_BollingerBands = 1;
-    StatType_ExponentialMovingAverage = 2;
-    StatType_RelativeStrengthIndex = 3;
-    StatType_MovingAverageConvergenceDivergence = 4;
-    StatType_MovingAverage = 5;
+    StatType_BollingerBandLower = 1;
+    StatType_BollingerBandMiddle = 2;
+    StatType_BollingerBandUpper = 3;
+    StatType_ExponentialMovingAverage = 4;
+    StatType_RelativeStrengthIndex = 5;
+    StatType_MovingAverageConvergenceDivergence = 6;
+    StatType_MovingAverage = 7;
 }
 

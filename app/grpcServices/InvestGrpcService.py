@@ -29,7 +29,7 @@ class InvestGrpcService(invest_pb2_grpc.InvestServiceServicer):
     def GetInstrumentStat(self, request, context):
         request_model = GetInstrumentStatRequestModel(
             instrument_id=request.instrument_id,
-            stat_type=InstrumentStatType(request.stat_type),
+            stat_type=InvestGrpcService.__get_domain_stat_type(request.stat_type),
             from_=getattr(request, "from").ToDatetime() if request.HasField("from") else None,
             to=request.to.ToDatetime() if request.HasField("to") else None,
         )
@@ -48,3 +48,20 @@ class InvestGrpcService(invest_pb2_grpc.InvestServiceServicer):
             buy_available=instrument.buy_available,
             sell_available=instrument.sell_available,
         )
+
+
+    __proto_to_domain_stat_type_mapping = {
+        invest_pb2.StatType.Unknown: InstrumentStatType.Unknown,
+        invest_pb2.StatType.BollingerBandLower: InstrumentStatType.BollingerBandLower,
+        invest_pb2.StatType.BollingerBandMiddle: InstrumentStatType.BollingerBandMiddle,
+        invest_pb2.StatType.BollingerBandUpper: InstrumentStatType.BollingerBandUpper,
+        invest_pb2.StatType.ExponentialMovingAverage: InstrumentStatType.ExponentialMovingAverage,
+        invest_pb2.StatType.RelativeStrengthIndex: InstrumentStatType.RelativeStrengthIndex,
+        invest_pb2.StatType.MovingAverageConvergenceDivergence: InstrumentStatType.MovingAverageConvergenceDivergence,
+        invest_pb2.StatType.MovingAverage: InstrumentStatType.MovingAverage,
+    }
+    @staticmethod
+    def __get_domain_stat_type(request_stat_type) -> InstrumentStatType:
+        return InvestGrpcService\
+            .__proto_to_domain_stat_type_mapping\
+            .get(request_stat_type, invest_pb2.StatType.Unknown)

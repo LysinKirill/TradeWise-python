@@ -3,8 +3,10 @@ from enum import Enum
 
 class InstrumentStatType(Enum):
     Unknown = 0
-    BollingerBands = 1
-    ExponentialMovingAverage = 2
-    RelativeStrengthIndex = 3
-    MovingAverageConvergenceDivergence = 4
-    MovingAverage = 5
+    BollingerBandLower = 1
+    BollingerBandMiddle = 2
+    BollingerBandUpper = 3
+    ExponentialMovingAverage = 4
+    RelativeStrengthIndex = 5
+    MovingAverageConvergenceDivergence = 6
+    MovingAverage = 7
