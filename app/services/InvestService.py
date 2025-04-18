@@ -29,10 +29,7 @@ class InvestService(IInvestService):
 
     def get_instrument_stat(self, request: GetInstrumentStatRequestModel) -> GetInstrumentStatResponseModel:
         client_response_stat = self.marketdata_client.get_instrument_stat(request)
-        stat = client_response_stat[0]
-        return GetInstrumentStatResponseModel(0)
-
-
+        return GetInstrumentStatResponseModel(stat_value=client_response_stat)
 
 
     @staticmethod
