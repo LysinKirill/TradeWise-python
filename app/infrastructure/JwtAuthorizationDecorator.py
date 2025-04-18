@@ -29,14 +29,12 @@ def jwt_authorization(func):
                 context.abort(grpc.StatusCode.UNAUTHENTICATED, "Invalid or missing JWT token")
                 return
 
-            return func(self, request, context)
-        except grpc.RpcError as e:
-            logger.error(f"[RPC ERROR]: {e}")
-            raise
         except Exception as e:
             logger.error(e)
             if context.code() != grpc.StatusCode.UNAUTHENTICATED:
                 context.abort(grpc.StatusCode.UNAUTHENTICATED, f"Authorization failed")
             raise grpc.RpcError()
+
+        return func(self, request, context)
 
     return wrapper
