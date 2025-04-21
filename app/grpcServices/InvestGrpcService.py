@@ -1,5 +1,9 @@
+import grpc
+
 from app.debug.ExceptionLogger import exception_logging
 from app.domain.models.invest import InstrumentModel
+from app.domain.models.invest.InstrumentStatType import InstrumentStatType
+from app.domain.models.invest.requests.GetInstrumentStatRequestModel import GetInstrumentStatRequestModel
 from app.domain.services.IInvestService import IInvestService
 from app.infrastructure.JwtAuthorizationDecorator import jwt_authorization
 from app.infrastructure.RequestResponseLogging import request_response_logging
@@ -23,6 +27,26 @@ class InvestGrpcService(invest_pb2_grpc.InvestServiceServicer):
         return invest_pb2.GetSupportedInstrumentsResponse(instruments=
         [InvestGrpcService.__get_instrument_from_model(instrument) for instrument in response.instruments])
 
+    @exception_logging
+    @request_response_logging()
+    @jwt_authorization
+    def GetInstrumentStat(self, request, context):
+        request_model = GetInstrumentStatRequestModel(
+            instrument_id=request.instrument_id,
+            stat_type=InvestGrpcService.__get_domain_stat_type(request.stat_type),
+            from_=getattr(request, "from").ToDatetime() if request.HasField("from") else None,
+            to=request.to.ToDatetime() if request.HasField("to") else None,
+        )
+        response = self.invest_service.get_instrument_stat(request_model)
+
+        if response.stat_value is None:
+            context.abort(
+                grpc.StatusCode.NOT_FOUND,
+                f"Unable to get value of stat \"{request_model.stat_type.name}\" for instrument \"{request_model.instrument_id}\" for the given period"
+            )
+            return invest_pb2.GetInstrumentStatResponse()
+
+        return invest_pb2.GetInstrumentStatResponse(stat_value=response.stat_value)
 
     @staticmethod
     def __get_instrument_from_model(instrument: InstrumentModel.InstrumentModel):
@@ -36,3 +60,19 @@ class InvestGrpcService(invest_pb2_grpc.InvestServiceServicer):
             buy_available=instrument.buy_available,
             sell_available=instrument.sell_available,
         )
+
+    __proto_to_domain_stat_type_mapping = {
+        invest_pb2.StatType.StatType_Unknown: InstrumentStatType.Unknown,
+        invest_pb2.StatType.StatType_BollingerBandLower: InstrumentStatType.BollingerBandLower,
+        invest_pb2.StatType.StatType_BollingerBandMiddle: InstrumentStatType.BollingerBandMiddle,
+        invest_pb2.StatType.StatType_BollingerBandUpper: InstrumentStatType.BollingerBandUpper,
+        invest_pb2.StatType.StatType_ExponentialMovingAverage: InstrumentStatType.ExponentialMovingAverage,
+        invest_pb2.StatType.StatType_RelativeStrengthIndex: InstrumentStatType.RelativeStrengthIndex,
+        invest_pb2.StatType.StatType_MovingAverageConvergenceDivergence: InstrumentStatType.MovingAverageConvergenceDivergence,
+        invest_pb2.StatType.StatType_MovingAverage: InstrumentStatType.MovingAverage,
+    }
+    @staticmethod
+    def __get_domain_stat_type(request_stat_type) -> InstrumentStatType:
+        return InvestGrpcService\
+            .__proto_to_domain_stat_type_mapping\
+            .get(request_stat_type, invest_pb2.StatType.StatType_Unknown)

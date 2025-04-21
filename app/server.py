@@ -24,6 +24,7 @@ from app.services.ClaimValuesService import ClaimValuesService
 from app.infrastructure.GrpcContextAccessor import GrpcContextAccessor
 from dataAccess.UserRepository import UserRepository
 from dataAccess.PgConnectionProvider import PgConnectionProvider
+from externalClients.TInvestApi.handlers.MarketDataClient import MarketDataClient
 from externalClients.TInvestApi.handlers.InstrumentsClient import InstrumentsClient
 from externalClients.TInvestApi.handlers.UserClient import UserClient
 
@@ -94,6 +95,11 @@ class Container(containers.DeclarativeContainer):
         endpoint=t_api_endpoint,
         api_key=t_api_token
     )
+    marketdata_client = providers.Singleton(
+        MarketDataClient,
+        endpoint=t_api_endpoint,
+        api_key=t_api_token
+    )
     user_service = providers.Factory(
         UserService,
         user_client=user_client,
@@ -102,6 +108,7 @@ class Container(containers.DeclarativeContainer):
     invest_service = providers.Factory(
         InvestService,
         instruments_client=instruments_client,
+        marketdata_client=marketdata_client,
         supported_instruments_options=supported_instruments_options,
     )
     user_grpc_service = providers.Factory(
