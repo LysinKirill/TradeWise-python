@@ -1,4 +1,7 @@
+import asyncio
+import os
 import pydapper
+from dotenv import load_dotenv
 from datetime import datetime
 from migrations.infrastructure.setup.logger_setup import setup_logging
 from migrations.infrastructure.setup.migrator_setup import (
@@ -14,19 +17,20 @@ from migrations.infrastructure.setup.migrator_setup import (
 
 logger = setup_logging()
 
-def main() -> None:
+async def main() -> None:
+    load_dotenv()
     logger.info("Loading migration classes...")
     migration_classes = load_migration_classes()
     logger.info(f"A total of {len(migration_classes)} migration classes were loaded.")
 
-    with (pydapper.connect(get_connection_string(
-            user='postgres',
-            password='postgres',
-            host='python-db',
-            port=5432,
-            dbname='python-db')) as commands):
-        create_version_table_if_not_exists(commands)
-        db_version_info = get_version_info(commands)
+    async with (pydapper.connect_async(get_connection_string(
+            user=os.getenv('DB_USER', 'postgres'),
+            password=os.getenv('DB_PASSWORD', 'postgres'),
+            host=os.getenv('DB_HOST', 'python-db'),
+            port=int(os.getenv('DB_PORT', 5432)),
+            dbname=os.getenv('DB_NAME', 'python-db'))) as commands):
+        await create_version_table_if_not_exists(commands)
+        db_version_info = await get_version_info(commands)
 
         skipped_migrations = []
         failed_migrations = []
@@ -38,8 +42,8 @@ def main() -> None:
             try:
                 if should_apply_migration(db_version_info, migration_cls.version):
                     migration_obj = migration_cls()
-                    migration_obj.migrate_up(commands)
-                    save_applied_migration_in_db(commands, migration_cls.version, migration_cls.description, current_datetime)
+                    await migration_obj.migrate_up(commands)
+                    await save_applied_migration_in_db(commands, migration_cls.version, migration_cls.description, current_datetime)
                     applied_migrations.append(migration_cls)
                     continue
                 skipped_migrations.append(migration_cls)
@@ -55,4 +59,4 @@ def main() -> None:
     logger.info("Done.")
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
