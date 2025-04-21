@@ -6,5 +6,5 @@ from pydapper.commands import Commands
 
 class ForwardMigration(ABC):
     @abstractmethod
-    def migrate_up(self, commands: Commands) -> None:
+    async def migrate_up(self, commands: Commands) -> None:
         pass
