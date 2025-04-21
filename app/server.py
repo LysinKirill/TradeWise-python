@@ -11,13 +11,11 @@ from app.configuration import Settings, SupportedInstrumentsOptions
 from app.grpcServices.InvestGrpcService import InvestGrpcService
 from app.interceptors.ContextInterceptor import ContextInterceptor
 from app.proto import (
-    hello_pb2_grpc,
     user_pb2_grpc,
     invest_pb2_grpc
 )
-from app.grpcServices.HelloGrpcService import HelloGrpcService
+
 from app.grpcServices.UserGrpcService import UserGrpcService
-from app.services.HelloService import HelloService
 from app.services.InvestService import InvestService
 from app.services.UserService import UserService
 from app.services.ClaimValuesService import ClaimValuesService
@@ -77,12 +75,6 @@ class Container(containers.DeclarativeContainer):
     user_repository = providers.Factory(
         UserRepository,
         connection_provider=pg_connection_provider
-    )
-
-    hello_service = providers.Singleton(HelloService)
-    hello_grpc_service = providers.Factory(
-        HelloGrpcService,
-        hello_service=hello_service
     )
 
     user_client = providers.Singleton(
@@ -176,8 +168,6 @@ def serve():
 
 
 def register_grpc_services(container: Container, server: grpc.Server):
-    hello_grpc_service = container.hello_grpc_service()
-    hello_pb2_grpc.add_HelloWorldServicer_to_server(hello_grpc_service, server)
     user_grpc_service = container.user_grpc_service()
     user_pb2_grpc.add_UserServiceServicer_to_server(user_grpc_service, server)
     invest_grpc_service = container.invest_grpc_service()

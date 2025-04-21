@@ -6,7 +6,6 @@ class InternalProtoRelativePathProcessor(ProtoProcessorBase):
         ProtoProcessorBase.__init__(
             self,
             import_statements_to_replace=[
-                "import hello_pb2",
                 "import user_pb2",
                 "import invest_pb2"
             ],
