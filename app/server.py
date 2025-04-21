@@ -1,4 +1,7 @@
+import asyncio
+
 import grpc
+from grpc import aio
 from concurrent import futures
 import time
 import os
@@ -65,11 +68,11 @@ class Container(containers.DeclarativeContainer):
 
     pg_connection_provider = providers.Singleton(
         PgConnectionProvider,
-        username='postgres',
-        password='postgres',
-        host='python-db',
-        port=5432,
-        db='python-db'
+        username=os.getenv('DB_USER', 'postgres'),
+        password=os.getenv('DB_PASSWORD', 'postgres'),
+        host=os.getenv('DB_HOST','python-db'),
+        port=int(os.getenv('DB_PORT', 5432)),
+        db=os.getenv('DB_NAME', 'python-db')
     )
 
     user_repository = providers.Factory(
@@ -115,7 +118,7 @@ class Container(containers.DeclarativeContainer):
     )
 
 
-def serve():
+async def serve():
     load_dotenv()
 
     access_token = os.environ.get("INVEST_TOKEN")
@@ -134,7 +137,7 @@ def serve():
 
     context_interceptor = ContextInterceptor(container.context_accessor())
 
-    server = grpc.server(
+    server = aio.server(
         futures.ThreadPoolExecutor(max_workers=10),
         interceptors=(context_interceptor,)
     )
@@ -158,13 +161,13 @@ def serve():
         logger.info(f"Failed to start server: {str(e)}")
         raise
 
-    server.start()
+    await server.start()
     try:
         while True:
             time.sleep(SECONDS_IN_DAY)
     except KeyboardInterrupt:
         logger.info("Stopping server...")
-        server.stop(0)
+        await server.stop(0)
 
 
 def register_grpc_services(container: Container, server: grpc.Server):
@@ -175,4 +178,4 @@ def register_grpc_services(container: Container, server: grpc.Server):
 
 
 if __name__ == '__main__':
-    serve()
+    asyncio.run(serve())
