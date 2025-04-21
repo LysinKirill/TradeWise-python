@@ -9,9 +9,9 @@ from app.domain.models.user.responses import GetAccountsResponseModel
 
 class IUserService(ABC):
     @abstractmethod
-    def get_accounts(self, request: GetAccountsRequestModel.GetAccountsRequestModel) -> GetAccountsResponseModel.GetAccountsResponseModel:
+    async def get_accounts(self, request: GetAccountsRequestModel.GetAccountsRequestModel) -> GetAccountsResponseModel.GetAccountsResponseModel:
         pass
 
     @abstractmethod
-    def add_invest_api_key(self, request: AddInvestApiKeyRequestModel.AddInvestApiKeyRequestModel) -> bool:
+    async def add_invest_api_key(self, request: AddInvestApiKeyRequestModel.AddInvestApiKeyRequestModel) -> bool:
         pass

@@ -7,9 +7,9 @@ from app.domain.models.invest.responses.GetSupportedInstrumentsResponseModel imp
 
 class IInvestService(ABC):
     @abstractmethod
-    def get_supported_instruments(self) -> GetSupportedInstrumentsResponseModel:
+    async def get_supported_instruments(self) -> GetSupportedInstrumentsResponseModel:
         pass
 
     @abstractmethod
-    def get_instrument_stat(self, request: GetInstrumentStatRequestModel) -> GetInstrumentStatResponseModel:
+    async def get_instrument_stat(self, request: GetInstrumentStatRequestModel) -> GetInstrumentStatResponseModel:
         pass
