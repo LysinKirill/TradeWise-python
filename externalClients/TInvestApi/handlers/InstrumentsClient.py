@@ -10,13 +10,13 @@ class InstrumentsClient(BaseClient):
         self.stub = instruments_pb2_grpc.InstrumentsServiceStub(self.channel)
 
 
-    def get_instruments(self, instrument_ids: list[str]):
+    async def get_instruments(self, instrument_ids: list[str]):
         instruments = []
         for instrument_id in instrument_ids:
             request = instruments_pb2.InstrumentRequest(
                 id_type = instruments_pb2.InstrumentIdType.Value("INSTRUMENT_ID_TYPE_UID"),
                 id = instrument_id
             )
-            response = self.stub.ShareBy(request, metadata=self.get_metadata())
+            response = await self.stub.ShareBy(request, metadata=self.get_metadata())
             instruments.append(response.instrument)
         return instruments

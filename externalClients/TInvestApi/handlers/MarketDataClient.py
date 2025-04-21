@@ -17,7 +17,7 @@ class MarketDataClient(BaseClient):
         self.stub = marketdata_pb2_grpc.MarketDataServiceStub(self.channel)
 
 
-    def get_instrument_stat(self, request: GetInstrumentStatRequestModel.GetInstrumentStatRequestModel) -> float | None:
+    async def get_instrument_stat(self, request: GetInstrumentStatRequestModel.GetInstrumentStatRequestModel) -> float | None:
         if request.stat_type == InstrumentStatType.Unknown: return None
 
         indicator_type = MarketDataClient.__python_to_grpc_enum(request.stat_type)
@@ -38,7 +38,7 @@ class MarketDataClient(BaseClient):
         )
         setattr(invest_api_request, "from", datetime_from)
         try:
-            invest_api_response = self.stub.GetTechAnalysis(invest_api_request, metadata=self.get_metadata())
+            invest_api_response = await self.stub.GetTechAnalysis(invest_api_request, metadata=self.get_metadata())
         except grpc.RpcError:
             return None
 
