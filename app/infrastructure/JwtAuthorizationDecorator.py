@@ -17,9 +17,8 @@ def jwt_authorization(func):
     """
     Decorator to enforce JWT Bearer authorization for gRPC methods.
     """
-
     @wraps(func)
-    def wrapper(self, request, context):
+    async def wrapper(self, request, context):
         try:
             headers = {key for key, value in context.invocation_metadata()}
             if "authorization" not in headers:
@@ -35,6 +34,6 @@ def jwt_authorization(func):
                 context.abort(grpc.StatusCode.UNAUTHENTICATED, f"Authorization failed")
             raise grpc.RpcError()
 
-        return func(self, request, context)
+        return await func(self, request, context)
 
     return wrapper

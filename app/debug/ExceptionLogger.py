@@ -14,9 +14,9 @@ logger = logging.getLogger("[ExceptionLogger]")
 
 def exception_logging(func):
     @wraps(func)
-    def wrapper(self, request, context):
+    async def wrapper(self, request, context):
         try:
-            return func(self, request, context)
+            return await func(self, request, context)
         except Exception as e:
             if context.code() != grpc.StatusCode.OK:
                 logger.error(f"RPC Exception: Status code: {context.code()}, Details: {context.details()}")
