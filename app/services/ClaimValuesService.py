@@ -15,7 +15,7 @@ class ClaimValuesService(IClaimValuesService):
         self.context_accessor = context_accessor
         self.jwt_secret = jwt_secret
 
-    def get_email(self) -> str:
+    async def get_email(self) -> str:
         """
         Extracts the user's email from the JWT claims in the gRPC request metadata.
         :return: The user's email as a string.
@@ -26,15 +26,15 @@ class ClaimValuesService(IClaimValuesService):
         auth_header = self._get_auth_header(metadata)
 
         if not auth_header:
-            context.abort(grpc.StatusCode.UNAUTHENTICATED, "Authorization header is missing")
+            await context.abort(grpc.StatusCode.UNAUTHENTICATED, "Authorization header is missing")
 
         token = self._extract_jwt_token(auth_header)
         if not token:
-            context.abort(grpc.StatusCode.UNAUTHENTICATED, "Invalid authorization header")
+            await context.abort(grpc.StatusCode.UNAUTHENTICATED, "Invalid authorization header")
 
         email = self._decode_jwt_and_get_email(token)
         if not email:
-            context.abort(grpc.StatusCode.UNAUTHENTICATED, "Invalid or expired token")
+            await context.abort(grpc.StatusCode.UNAUTHENTICATED, "Invalid or expired token")
 
         return email
 

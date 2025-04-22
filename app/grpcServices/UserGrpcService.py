@@ -23,10 +23,10 @@ class UserGrpcService(user_pb2_grpc.UserServiceServicer):
     @exception_logging
     @request_response_logging()
     @jwt_authorization
-    def GetAccounts(self, request, context):
+    async def GetAccounts(self, request, context):
 
         request_model = GetAccountsRequestModel(status=UserGrpcService.__get_account_status(request.account_status))
-        response = self.user_service.get_accounts(request_model)
+        response = await self.user_service.get_accounts(request_model)
 
         return user_pb2.GetAccountsResponse(accounts=
         [user_pb2.AccountInfo(id=account.id, name=account.name) for account in response.accounts])
@@ -34,10 +34,10 @@ class UserGrpcService(user_pb2_grpc.UserServiceServicer):
     @exception_logging
     @request_response_logging()
     @jwt_authorization
-    def AddInvestApiKey(self, request, context):
-        email = self.claim_values_service.get_email()
+    async def AddInvestApiKey(self, request, context):
+        email = await self.claim_values_service.get_email()
         request_model = AddInvestApiKeyRequestModel(api_key=request.api_key, email=email)
-        self.user_service.add_invest_api_key(request_model)
+        await self.user_service.add_invest_api_key(request_model)
         return empty_pb2.Empty()
 
     @staticmethod

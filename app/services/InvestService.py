@@ -20,15 +20,15 @@ class InvestService(IInvestService):
         self.supported_instruments_options = supported_instruments_options
         self.marketdata_client = marketdata_client
 
-    def get_supported_instruments(self) -> GetSupportedInstrumentsResponseModel:
+    async def get_supported_instruments(self) -> GetSupportedInstrumentsResponseModel:
         supported_instruments_ids = self.supported_instruments_options.shares
-        client_response_instruments = self.instruments_client.get_instruments(supported_instruments_ids)
+        client_response_instruments = await self.instruments_client.get_instruments(supported_instruments_ids)
         return GetSupportedInstrumentsResponseModel(
             instruments=list(map(InvestService.__get_instrument, client_response_instruments))
         )
 
-    def get_instrument_stat(self, request: GetInstrumentStatRequestModel) -> GetInstrumentStatResponseModel:
-        client_response_stat = self.marketdata_client.get_instrument_stat(request)
+    async def get_instrument_stat(self, request: GetInstrumentStatRequestModel) -> GetInstrumentStatResponseModel:
+        client_response_stat = await self.marketdata_client.get_instrument_stat(request)
         return GetInstrumentStatResponseModel(stat_value=client_response_stat)
 
 

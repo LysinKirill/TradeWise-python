@@ -1,7 +1,8 @@
 import pydapper
 
-from pydapper.commands import Commands
+from pydapper.commands import CommandsAsync
 from dataAccess.interfaces.IPgConnectionProvider import IPgConnectionProvider
+from typing import AsyncIterator
 
 
 class PgConnectionProvider(IPgConnectionProvider):
@@ -19,14 +20,18 @@ class PgConnectionProvider(IPgConnectionProvider):
         self.port = port
         self.db = db
 
-    def get_connection(self) -> Commands:
-        return pydapper.connect(PgConnectionProvider._get_connection_string(
-            user=self.username,
-            password=self.password,
-            host=self.host,
-            port=self.port,
-            dbname=self.db))
+    async def get_connection(self) -> AsyncIterator[CommandsAsync]:
+        async with pydapper.connect_async(
+            PgConnectionProvider._get_connection_string(
+                user=self.username,
+                password=self.password,
+                host=self.host,
+                port=self.port,
+                dbname=self.db
+            )
+        ) as connection:
+            yield connection
 
     @staticmethod
     def _get_connection_string(user: str, password: str, host: str, port: int, dbname: str) -> str:
-        return f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{dbname}"
+        return f"postgresql+psycopg://{user}:{password}@{host}:{port}/{dbname}"

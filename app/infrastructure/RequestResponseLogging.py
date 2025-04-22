@@ -21,13 +21,12 @@ def request_response_logging(logger_prompt: str | None = None):
 
     def request_response_decorator(func):
         @wraps(func)
-        def wrapper(self, request, context):
+        async def wrapper(self, request, context):
             if logger_prompt is not None:
                 logger.info(logger_prompt)
             logger.info(f"Request to {func.__name__}: \n{add_padding(request, '    ')}")
-            response = func(self, request, context)
+            response = await func(self, request, context)
             logger.info(f"Response from {func.__name__}: \n{add_padding(response, '    ')}")
-
             return response
         return wrapper
     return request_response_decorator

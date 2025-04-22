@@ -22,22 +22,22 @@ class InvestGrpcService(invest_pb2_grpc.InvestServiceServicer):
     @exception_logging
     @request_response_logging()
     @jwt_authorization
-    def GetSupportedInstruments(self, request, context):
-        response = self.invest_service.get_supported_instruments()
+    async def GetSupportedInstruments(self, request, context):
+        response = await self.invest_service.get_supported_instruments()
         return invest_pb2.GetSupportedInstrumentsResponse(instruments=
         [InvestGrpcService.__get_instrument_from_model(instrument) for instrument in response.instruments])
 
     @exception_logging
     @request_response_logging()
     @jwt_authorization
-    def GetInstrumentStat(self, request, context):
+    async def GetInstrumentStat(self, request, context):
         request_model = GetInstrumentStatRequestModel(
             instrument_id=request.instrument_id,
             stat_type=InvestGrpcService.__get_domain_stat_type(request.stat_type),
             from_=getattr(request, "from").ToDatetime() if request.HasField("from") else None,
             to=request.to.ToDatetime() if request.HasField("to") else None,
         )
-        response = self.invest_service.get_instrument_stat(request_model)
+        response = await self.invest_service.get_instrument_stat(request_model)
 
         if response.stat_value is None:
             context.abort(

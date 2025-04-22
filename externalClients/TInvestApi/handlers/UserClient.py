@@ -8,10 +8,10 @@ class UserClient(BaseClient):
         super().__init__(endpoint, api_key)
         self.stub = users_pb2_grpc.UsersServiceStub(self.channel)
 
-    def get_accounts(self, account_status: AccountStatusModel.AccountStatusModel =
+    async def get_accounts(self, account_status: AccountStatusModel.AccountStatusModel =
                      AccountStatusModel.AccountStatusModel.ACCOUNT_STATUS_ALL):
         request = users_pb2.GetAccountsRequest(status=UserClient.__get_client_account_status(account_status))
-        response = self.stub.GetAccounts(request, metadata=self.get_metadata())
+        response = await self.stub.GetAccounts(request, metadata=self.get_metadata())
 
         return response
 

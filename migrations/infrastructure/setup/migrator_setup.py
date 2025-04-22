@@ -1,12 +1,12 @@
 from pathlib import Path
 import importlib.util
 from datetime import datetime
-from pydapper.commands import Commands
+from pydapper.commands import CommandsAsync
 from migrations.MigrationInfo import MigrationInfo
 
-def get_version_info(commands) -> list[MigrationInfo]:
+async def get_version_info(commands: CommandsAsync) -> list[MigrationInfo]:
     """Returns migrations version info from database"""
-    version_info = commands.query(
+    version_info = await commands.query_async(
         '''
             select
                 id, version, applied_on, description
@@ -16,9 +16,9 @@ def get_version_info(commands) -> list[MigrationInfo]:
         model=MigrationInfo)
     return version_info
 
-def create_version_table_if_not_exists(commands) -> None:
+async def create_version_table_if_not_exists(commands: CommandsAsync) -> None:
     """Creates the version table if it doesn't exist"""
-    commands.execute(
+    await commands.execute_async(
         '''CREATE TABLE IF NOT EXISTS version_info (
                 id serial PRIMARY KEY,
                 version integer UNIQUE,
@@ -48,7 +48,7 @@ def load_migration_classes():
     return migration_classes
 
 def get_connection_string(user: str, password: str, host: str, port: int, dbname: str) -> str:
-    return f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{dbname}"
+    return f"postgresql+psycopg://{user}:{password}@{host}:{port}/{dbname}"
 
 def should_apply_migration(migration_info: list[MigrationInfo], migration_version: int) -> bool:
     return not any(
@@ -61,8 +61,8 @@ def log_migrations_info(logger, migrations, annotation: str | None = None) -> No
     for migration in migrations:
         logger.info(f"Version: {migration.version}; Description: {migration.description}")
 
-def save_applied_migration_in_db(commands: Commands, version: int, description: str, applied_on: datetime) -> None:
-    commands.execute(
+async def save_applied_migration_in_db(commands: CommandsAsync, version: int, description: str, applied_on: datetime) -> None:
+    await commands.execute_async(
         sql='''
         insert into version_info (version, applied_on, description)
         values (?version?, ?applied_on?, ?description?);

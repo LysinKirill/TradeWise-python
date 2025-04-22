@@ -1,6 +1,7 @@
+import asyncio
+
 import grpc
-from concurrent import futures
-import time
+from grpc import aio
 import os
 from dotenv import load_dotenv
 from dependency_injector import containers, providers
@@ -11,13 +12,11 @@ from app.configuration import Settings, SupportedInstrumentsOptions
 from app.grpcServices.InvestGrpcService import InvestGrpcService
 from app.interceptors.ContextInterceptor import ContextInterceptor
 from app.proto import (
-    hello_pb2_grpc,
     user_pb2_grpc,
     invest_pb2_grpc
 )
-from app.grpcServices.HelloGrpcService import HelloGrpcService
+
 from app.grpcServices.UserGrpcService import UserGrpcService
-from app.services.HelloService import HelloService
 from app.services.InvestService import InvestService
 from app.services.UserService import UserService
 from app.services.ClaimValuesService import ClaimValuesService
@@ -36,7 +35,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-SECONDS_IN_DAY = 86400
+GRACE_PERIOD_IN_SECOND = 15
 SERVER_PORT = 50051
 
 TINKOFF_API_PROD = 'invest-public-api.tinkoff.ru:443'
@@ -67,22 +66,16 @@ class Container(containers.DeclarativeContainer):
 
     pg_connection_provider = providers.Singleton(
         PgConnectionProvider,
-        username='postgres',
-        password='postgres',
-        host='python-db',
-        port=5432,
-        db='python-db'
+        username=os.getenv('DB_USER', 'postgres'),
+        password=os.getenv('DB_PASSWORD', 'postgres'),
+        host=os.getenv('DB_HOST','python-db'),
+        port=int(os.getenv('DB_PORT', 5432)),
+        db=os.getenv('DB_NAME', 'python-db')
     )
 
     user_repository = providers.Factory(
         UserRepository,
         connection_provider=pg_connection_provider
-    )
-
-    hello_service = providers.Singleton(HelloService)
-    hello_grpc_service = providers.Factory(
-        HelloGrpcService,
-        hello_service=hello_service
     )
 
     user_client = providers.Singleton(
@@ -123,7 +116,7 @@ class Container(containers.DeclarativeContainer):
     )
 
 
-def serve():
+async def serve():
     load_dotenv()
 
     access_token = os.environ.get("INVEST_TOKEN")
@@ -142,8 +135,7 @@ def serve():
 
     context_interceptor = ContextInterceptor(container.context_accessor())
 
-    server = grpc.server(
-        futures.ThreadPoolExecutor(max_workers=10),
+    server = aio.server(
         interceptors=(context_interceptor,)
     )
 
@@ -163,21 +155,21 @@ def serve():
         logger.info(f"Server started on [::]:{SERVER_PORT}")
 
     except Exception as e:
-        logger.info(f"Failed to start server: {str(e)}")
+        logger.error(f"Failed to start server: {str(e)}")
         raise
 
-    server.start()
+    await server.start()
+    logger.info("Server is running...")
+
     try:
         while True:
-            time.sleep(SECONDS_IN_DAY)
-    except KeyboardInterrupt:
-        logger.info("Stopping server...")
-        server.stop(0)
+            await asyncio.sleep(1)
+    except (asyncio.CancelledError, KeyboardInterrupt):
+        logger.info("Shutdown signal received. Gracefully stopping server...")
+        await server.stop(GRACE_PERIOD_IN_SECOND)
 
 
 def register_grpc_services(container: Container, server: grpc.Server):
-    hello_grpc_service = container.hello_grpc_service()
-    hello_pb2_grpc.add_HelloWorldServicer_to_server(hello_grpc_service, server)
     user_grpc_service = container.user_grpc_service()
     user_pb2_grpc.add_UserServiceServicer_to_server(user_grpc_service, server)
     invest_grpc_service = container.invest_grpc_service()
@@ -185,4 +177,6 @@ def register_grpc_services(container: Container, server: grpc.Server):
 
 
 if __name__ == '__main__':
-    serve()
+    if os.name == 'nt':
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    asyncio.run(serve())
