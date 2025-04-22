@@ -138,7 +138,6 @@ async def serve():
     context_interceptor = ContextInterceptor(container.context_accessor())
 
     server = aio.server(
-        futures.ThreadPoolExecutor(max_workers=10),
         interceptors=(context_interceptor,)
     )
 
@@ -164,7 +163,7 @@ async def serve():
     await server.start()
     try:
         while True:
-            time.sleep(SECONDS_IN_DAY)
+            await asyncio.sleep(SECONDS_IN_DAY)
     except KeyboardInterrupt:
         logger.info("Stopping server...")
         await server.stop(0)

@@ -22,16 +22,16 @@ def jwt_authorization(func):
         try:
             headers = {key for key, value in context.invocation_metadata()}
             if "authorization" not in headers:
-                context.abort(grpc.StatusCode.UNAUTHENTICATED, "Missing \"Authorization\" header")
+                await context.abort(grpc.StatusCode.UNAUTHENTICATED, "Missing \"Authorization\" header")
                 return
-            elif self.claim_values_service.get_email() is None:
-                context.abort(grpc.StatusCode.UNAUTHENTICATED, "Invalid or missing JWT token")
+            elif await self.claim_values_service.get_email() is None:
+                await context.abort(grpc.StatusCode.UNAUTHENTICATED, "Invalid or missing JWT token")
                 return
 
         except Exception as e:
             logger.error(e)
             if context.code() != grpc.StatusCode.UNAUTHENTICATED:
-                context.abort(grpc.StatusCode.UNAUTHENTICATED, f"Authorization failed")
+                await context.abort(grpc.StatusCode.UNAUTHENTICATED, f"Authorization failed")
             raise grpc.RpcError()
 
         return await func(self, request, context)

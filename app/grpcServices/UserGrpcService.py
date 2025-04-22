@@ -35,7 +35,7 @@ class UserGrpcService(user_pb2_grpc.UserServiceServicer):
     @request_response_logging()
     @jwt_authorization
     async def AddInvestApiKey(self, request, context):
-        email = self.claim_values_service.get_email()
+        email = await self.claim_values_service.get_email()
         request_model = AddInvestApiKeyRequestModel(api_key=request.api_key, email=email)
         await self.user_service.add_invest_api_key(request_model)
         return empty_pb2.Empty()
