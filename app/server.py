@@ -2,8 +2,6 @@ import asyncio
 
 import grpc
 from grpc import aio
-from concurrent import futures
-import time
 import os
 from dotenv import load_dotenv
 from dependency_injector import containers, providers
@@ -37,7 +35,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-SECONDS_IN_DAY = 86400
+GRACE_PERIOD_IN_SECOND = 15
 SERVER_PORT = 50051
 
 TINKOFF_API_PROD = 'invest-public-api.tinkoff.ru:443'
@@ -157,16 +155,18 @@ async def serve():
         logger.info(f"Server started on [::]:{SERVER_PORT}")
 
     except Exception as e:
-        logger.info(f"Failed to start server: {str(e)}")
+        logger.error(f"Failed to start server: {str(e)}")
         raise
 
     await server.start()
+    logger.info("Server is running...")
+
     try:
         while True:
-            await asyncio.sleep(SECONDS_IN_DAY)
-    except KeyboardInterrupt:
-        logger.info("Stopping server...")
-        await server.stop(0)
+            await asyncio.sleep(1)
+    except (asyncio.CancelledError, KeyboardInterrupt):
+        logger.info("Shutdown signal received. Gracefully stopping server...")
+        await server.stop(GRACE_PERIOD_IN_SECOND)
 
 
 def register_grpc_services(container: Container, server: grpc.Server):
@@ -177,4 +177,6 @@ def register_grpc_services(container: Container, server: grpc.Server):
 
 
 if __name__ == '__main__':
+    if os.name == 'nt':
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     asyncio.run(serve())
