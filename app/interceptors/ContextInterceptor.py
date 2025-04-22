@@ -1,49 +1,54 @@
-from app.infrastructure.GrpcContextAccessor import GrpcContextAccessor
 from grpc import aio
-from typing import Any, Callable, Optional
 import grpc
 
-
 class ContextInterceptor(aio.ServerInterceptor):
-    def __init__(self, context_accessor: GrpcContextAccessor):
+    def __init__(self, context_accessor):
         self._context_accessor = context_accessor
 
-    async def intercept_service(
-        self,
-        continuation: Callable[[grpc.HandlerCallDetails], Any],
-        handler_call_details: grpc.HandlerCallDetails
-    ) -> Any:
+    async def intercept_service(self, continuation, handler_call_details):
         handler = await continuation(handler_call_details)
 
-        if not handler:
-            return None
+        if not handler or not hasattr(handler, 'unary_unary'):
+            return handler
 
         if handler.request_streaming and handler.response_streaming:
-            # Bidirectional streaming
-            async def bidi_stream_handler(request_iterator, context):
+            async def bidi_wrapper(request_iterator, context):
                 self._context_accessor.set_context(context)
                 async for response in handler.stream_stream(request_iterator, context):
                     yield response
-            return bidi_stream_handler
+            return grpc.stream_stream_rpc_method_handler(
+                bidi_wrapper,
+                handler.request_deserializer,
+                handler.response_serializer
+            )
 
         elif handler.request_streaming:
-            # Client streaming
-            async def client_stream_handler(request_iterator, context):
+            async def client_stream_wrapper(request_iterator, context):
                 self._context_accessor.set_context(context)
                 return await handler.stream_unary(request_iterator, context)
-            return client_stream_handler
+            return grpc.stream_unary_rpc_method_handler(
+                client_stream_wrapper,
+                handler.request_deserializer,
+                handler.response_serializer
+            )
 
         elif handler.response_streaming:
-            # Server streaming
-            async def server_stream_handler(request, context):
+            async def server_stream_wrapper(request, context):
                 self._context_accessor.set_context(context)
                 async for response in handler.unary_stream(request, context):
                     yield response
-            return server_stream_handler
+            return grpc.unary_stream_rpc_method_handler(
+                server_stream_wrapper,
+                handler.request_deserializer,
+                handler.response_serializer
+            )
 
         else:
-            # Unary-unary
-            async def unary_unary_handler(request, context):
+            async def unary_wrapper(request, context):
                 self._context_accessor.set_context(context)
                 return await handler.unary_unary(request, context)
-            return unary_unary_handler
+            return grpc.unary_unary_rpc_method_handler(
+                unary_wrapper,
+                handler.request_deserializer,
+                handler.response_serializer
+            )
