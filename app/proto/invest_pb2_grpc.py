@@ -36,12 +36,12 @@ class InvestServiceStub(object):
             channel: A grpc.Channel.
         """
         self.GetSupportedInstruments = channel.unary_unary(
-                '/user.InvestService/GetSupportedInstruments',
+                '/invest.InvestService/GetSupportedInstruments',
                 request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
                 response_deserializer=invest__pb2.GetSupportedInstrumentsResponse.FromString,
                 _registered_method=True)
         self.GetInstrumentStat = channel.unary_unary(
-                '/user.InvestService/GetInstrumentStat',
+                '/invest.InvestService/GetInstrumentStat',
                 request_serializer=invest__pb2.GetInstrumentStatRequest.SerializeToString,
                 response_deserializer=invest__pb2.GetInstrumentStatResponse.FromString,
                 _registered_method=True)
@@ -77,9 +77,9 @@ def add_InvestServiceServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'user.InvestService', rpc_method_handlers)
+            'invest.InvestService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('user.InvestService', rpc_method_handlers)
+    server.add_registered_method_handlers('invest.InvestService', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
@@ -100,7 +100,7 @@ class InvestService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/user.InvestService/GetSupportedInstruments',
+            '/invest.InvestService/GetSupportedInstruments',
             google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             invest__pb2.GetSupportedInstrumentsResponse.FromString,
             options,
@@ -127,7 +127,7 @@ class InvestService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/user.InvestService/GetInstrumentStat',
+            '/invest.InvestService/GetInstrumentStat',
             invest__pb2.GetInstrumentStatRequest.SerializeToString,
             invest__pb2.GetInstrumentStatResponse.FromString,
             options,
