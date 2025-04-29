@@ -221,19 +221,23 @@ class TInvestDataProvider:
 
     async def load_candle_data_for_period(
         self,
-        train_period_start_utc: datetime,
-        train_period_end_utc: datetime,
+        period_start_utc: datetime,
+        period_end_utc: datetime,
         instrument_id: str,
         rate_limiter_delay_seconds: float = DEFAULT_RATE_LIMITER_DELAY
     ) -> pd.DataFrame:
         timestep = timedelta(hours=40)
 
         df = None
-        current_end = train_period_end_utc
+        current_end = period_end_utc
         current_start = current_end - timestep
+        flag = True
 
         try:
-            while current_start >= train_period_start_utc:
+            while flag:
+                if current_start < period_start_utc:
+                    current_start = period_start_utc
+                    flag = False
                 current_start = current_end - timestep
                 print(f"Fetching data for interval {current_start} - {current_end}. ", end="")
 
@@ -250,7 +254,7 @@ class TInvestDataProvider:
                     df = pd.concat([new_df, df])
 
                 current_end = current_start
-                print(f"Current df shape: {df.shape}; new candles fetched = {new_df.shape[0]}")
+                print(f"Current df shape: {df.shape}; new candles fetched = {new_df.shape[0]}\n")
                 await asyncio.sleep(rate_limiter_delay_seconds)
         except Exception as e:
             print(f"Unable to fetch data {e}")
