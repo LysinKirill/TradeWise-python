@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
-from typing import Optional, List, Dict, Union
+from typing import Optional, List
 import pandas as pd
+import asyncio
 from grpc import aio, ssl_channel_credentials
 from google.protobuf.timestamp_pb2 import Timestamp
 from externalClients.TInvestApi.proto import marketdata_pb2_grpc
@@ -16,15 +17,9 @@ from externalClients.TInvestApi.proto.marketdata_pb2 import (
     SubscriptionInterval
 )
 
+
 class TInvestDataProvider:
     def __init__(self, api_key: str, prod_endpoint: str = "invest-public-api.tinkoff.ru:443"):
-        """
-        Initialize Tinkoff Invest API data provider.
-
-        Args:
-            api_key: Your Tinkoff Invest API token
-            prod_endpoint: API endpoint (default is production)
-        """
         self.api_key = api_key
         self.endpoint = prod_endpoint
         self.channel = None
@@ -164,44 +159,109 @@ class TInvestDataProvider:
                 }
                 await callback(candle_data)
 
-    async def get_last_n_candles(
+
+
+    DEFAULT_RATE_LIMITER_DELAY = 0.25
+    DEFAULT_CANDLE_COUNT = 100_000
+
+    async def load_candle_data(
         self,
+        train_period_end_utc: datetime,
         instrument_id: str,
-        interval: CandleInterval,
-        n_candles: int,
-        candle_source_type: Optional[int] = None
+        target_candle_count: int = DEFAULT_CANDLE_COUNT,
+        rate_limiter_delay_seconds: float = DEFAULT_RATE_LIMITER_DELAY
     ) -> pd.DataFrame:
-        """
-        Get last N candles for specified instrument.
+        timestep = timedelta(hours=40)
 
-        Args:
-            instrument_id: FIGI or instrument_uid
-            interval: Candle interval
-            n_candles: Number of candles to retrieve
-            candle_source_type: Optional candle source type
+        df = None
+        current_end = train_period_end_utc
+        current_start = current_end - timestep
+        step_count = 1
 
-        Returns:
-            Pandas DataFrame with last N candles
-        """
-        # Calculate time range based on interval
-        now = datetime.utcnow()
+        try:
+            while True:
+                print(f"Step {step_count}. ", end="")
+                step_count += 1
+                current_start = current_end - timestep
 
-        # Estimate time range needed (approximate)
-        interval_mapping = {
-            CandleInterval.CANDLE_INTERVAL_1_MIN: timedelta(minutes=n_candles),
-            CandleInterval.CANDLE_INTERVAL_5_MIN: timedelta(minutes=5*n_candles),
-            CandleInterval.CANDLE_INTERVAL_15_MIN: timedelta(minutes=15*n_candles),
-            CandleInterval.CANDLE_INTERVAL_HOUR: timedelta(hours=n_candles),
-            CandleInterval.CANDLE_INTERVAL_DAY: timedelta(days=n_candles),
-        }
+                new_df = await self.get_historical_candles(
+                    instrument_id="e6123145-9665-43e0-8413-cd61b8aa9b13",
+                    from_time=current_start,
+                    to_time=current_end,
+                    interval=CandleInterval.CANDLE_INTERVAL_1_MIN
+                )
 
-        from_time = now - interval_mapping.get(interval, timedelta(days=n_candles))
+                if df is None:
+                    df = new_df
+                else:
+                    df = pd.concat([new_df, df])
 
-        return await self.get_historical_candles(
-            instrument_id=instrument_id,
-            from_time=from_time,
-            to_time=now,
-            interval=interval,
-            candle_source_type=candle_source_type,
-            limit=n_candles
-        )
+                if len(df) >= target_candle_count:
+                    df = df.iloc[-target_candle_count:]
+                    print(f"Current df shape: {df.shape}")
+                    break
+
+                current_end = current_start
+                print(f"Current df shape: {df.shape}; new candles fetched = {new_df.shape[0]}")
+                await asyncio.sleep(rate_limiter_delay_seconds)
+        except Exception as e:
+            print(f"Unable to fetch data {e}")
+            last_request_sent = {
+                "instrument_id": instrument_id,
+                "from_time": current_start,
+                "to_time": current_end,
+                "interval": CandleInterval.CANDLE_INTERVAL_1_MIN
+            }
+            print(f"Last executed request: {last_request_sent}")
+        finally:
+            await self.close()
+
+        return df
+
+
+    async def load_candle_data_for_period(
+        self,
+        train_period_start_utc: datetime,
+        train_period_end_utc: datetime,
+        instrument_id: str,
+        rate_limiter_delay_seconds: float = DEFAULT_RATE_LIMITER_DELAY
+    ) -> pd.DataFrame:
+        timestep = timedelta(hours=40)
+
+        df = None
+        current_end = train_period_end_utc
+        current_start = current_end - timestep
+
+        try:
+            while current_start >= train_period_start_utc:
+                current_start = current_end - timestep
+                print(f"Fetching data for interval {current_start} - {current_end}. ", end="")
+
+                new_df = await self.get_historical_candles(
+                    instrument_id="e6123145-9665-43e0-8413-cd61b8aa9b13",
+                    from_time=current_start,
+                    to_time=current_end,
+                    interval=CandleInterval.CANDLE_INTERVAL_1_MIN
+                )
+
+                if df is None:
+                    df = new_df
+                else:
+                    df = pd.concat([new_df, df])
+
+                current_end = current_start
+                print(f"Current df shape: {df.shape}; new candles fetched = {new_df.shape[0]}")
+                await asyncio.sleep(rate_limiter_delay_seconds)
+        except Exception as e:
+            print(f"Unable to fetch data {e}")
+            last_request_sent = {
+                "instrument_id": instrument_id,
+                "from_time": current_start,
+                "to_time": current_end,
+                "interval": CandleInterval.CANDLE_INTERVAL_1_MIN
+            }
+            print(f"Last executed request: {last_request_sent}")
+        finally:
+            await self.close()
+
+        return df
