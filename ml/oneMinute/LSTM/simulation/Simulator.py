@@ -104,8 +104,8 @@ class TradingSimulator:
                     # Calculate how many shares we can buy
                     max_shares = (balance // (current_price * self.lot_size * (1 + commission))) * self.lot_size
                     shares_owned = max_shares
-                    commission_paid = shares_owned * (current_price * self.lot_size * commission)
-                    balance = balance - (shares_owned * (current_price * self.lot_size) + commission)
+                    commission_paid = shares_owned * (current_price * commission)
+                    balance = balance - (shares_owned * current_price + commission)
                     commission_paid_total += commission_paid
                     buy_signals.append((i - lookback, current_price))
 
