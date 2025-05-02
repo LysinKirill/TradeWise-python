@@ -73,15 +73,17 @@ class TrainingPipeline:
 
     def log_configuration(self) -> None:
         logger = self.logger
+        cuda_available = torch.cuda.is_available()
         logger.info(
             f"Pytorch configuration: \n"
             f"PyTorch version: {torch.__version__}\n"
             f"CUDA available: {torch.cuda.is_available()}\n"
+        )
+        if cuda_available:
             f"CUDA device count: {torch.cuda.device_count()}\n"
             f"Current CUDA device: {torch.cuda.current_device()}\n"
             f"CUDA device name: {torch.cuda.get_device_name(0)}\n"
             f"_________________________________________________"
-        )
         logger.info(
             f"Training configuration: \n"
             f"{self.training_configuration}"
