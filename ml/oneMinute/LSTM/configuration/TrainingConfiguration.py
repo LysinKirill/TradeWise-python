@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 @dataclass(frozen=True)
-class LstmTrainingConfiguration:
+class TrainingConfiguration:
     instrument_id: str
     sequence_length: int
     train_period_start_utc: datetime

@@ -1,9 +1,14 @@
-from datetime import datetime, timedelta
-from typing import Optional, List
 import pandas as pd
 import asyncio
+
+from datetime import datetime, timedelta
+from typing import Optional, List
 from grpc import aio, ssl_channel_credentials
 from google.protobuf.timestamp_pb2 import Timestamp
+
+
+import instruments_pb2
+import instruments_pb2_grpc
 from externalClients.TInvestApi.proto import marketdata_pb2_grpc
 from externalClients.TInvestApi.proto.marketdata_pb2 import (
     GetCandlesRequest,
@@ -17,20 +22,26 @@ from externalClients.TInvestApi.proto.marketdata_pb2 import (
     SubscriptionInterval
 )
 
+from externalClients.TInvestApi.proto.instruments_pb2 import (
+    InstrumentRequest,
+    InstrumentIdType
+)
 
 class TInvestDataProvider:
     def __init__(self, api_key: str, prod_endpoint: str = "invest-public-api.tinkoff.ru:443"):
         self.api_key = api_key
         self.endpoint = prod_endpoint
         self.channel = None
-        self.stub = None
+        self.marketdata_stub = None
+        self.instruments_stub = None
         self._initialize_connection()
 
     def _initialize_connection(self):
         """Initialize gRPC connection and stub."""
         credentials = ssl_channel_credentials()
         self.channel = aio.secure_channel(self.endpoint, credentials)
-        self.stub = marketdata_pb2_grpc.MarketDataServiceStub(self.channel)
+        self.marketdata_stub = marketdata_pb2_grpc.MarketDataServiceStub(self.channel)
+        self.instruments_stub = instruments_pb2_grpc.InstrumentsServiceStub(self.channel)
 
     def _get_metadata(self):
         """Get authorization metadata for gRPC calls."""
@@ -87,7 +98,7 @@ class TInvestDataProvider:
         setattr(request, "from", from_time)
 
         # Make API call
-        response: GetCandlesResponse = await self.stub.GetCandles(
+        response: GetCandlesResponse = await self.marketdata_stub.GetCandles(
             request,
             metadata=self._get_metadata()
         )
@@ -142,7 +153,7 @@ class TInvestDataProvider:
         )
 
         # Start streaming
-        async for response in self.stub.MarketDataStream(
+        async for response in self.marketdata_stub.MarketDataStream(
             iter([request]),
             metadata=self._get_metadata()
         ):
@@ -213,11 +224,16 @@ class TInvestDataProvider:
                 "interval": CandleInterval.CANDLE_INTERVAL_1_MIN
             }
             print(f"Last executed request: {last_request_sent}")
-        finally:
-            await self.close()
 
         return df
 
+    async def get_instrument_info(self, instrument_id: str):
+        request = InstrumentRequest(
+            id_type=InstrumentIdType.Value("INSTRUMENT_ID_TYPE_UID"),
+            id=instrument_id
+        )
+        response = await self.instruments_stub.ShareBy(request, metadata=self._get_metadata())
+        return response.instrument
 
     async def load_candle_data_for_period(
         self,

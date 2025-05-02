@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class Normalizer:
     def __init__(self):
         self.min = None
