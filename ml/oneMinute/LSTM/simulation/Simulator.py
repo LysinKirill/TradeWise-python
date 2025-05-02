@@ -39,18 +39,15 @@ class TradingSimulator:
             end_timestamp_utc: datetime
     ) -> None:
         provider = TInvestDataProvider(api_key=self.invest_api_key)
-        try:
-            df = await provider.load_candle_data_for_period(
-                period_start_utc=start_timestamp_utc,
-                period_end_utc=end_timestamp_utc,
-                instrument_id=instrument_id
-            )
+        df = await provider.load_candle_data_for_period(
+            period_start_utc=start_timestamp_utc,
+            period_end_utc=end_timestamp_utc,
+            instrument_id=instrument_id
+        )
 
-            self.lot_size = (await provider.get_instrument_info(instrument_id=instrument_id)).lot
-            await provider.close()
-            self.close_data = df['close'].to_numpy()
-        finally:
-            await provider.close()
+        self.lot_size = (await provider.get_instrument_info(instrument_id=instrument_id)).lot
+        await provider.close()
+        self.close_data = df['close'].to_numpy()
 
 
     async def simulate_trading(

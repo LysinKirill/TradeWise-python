@@ -281,7 +281,5 @@ class TInvestDataProvider:
                 "interval": CandleInterval.CANDLE_INTERVAL_1_MIN
             }
             print(f"Last executed request: {last_request_sent}")
-        finally:
-            await self.close()
 
         return df
