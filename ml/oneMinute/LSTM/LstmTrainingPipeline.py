@@ -134,6 +134,7 @@ class TrainingPipeline:
             scaler=self.scaler,
             device=self.device,
             logger=logger,
+            model_name="LSTM_ONE_MINUTE",
             save_best_model=True
         )
 

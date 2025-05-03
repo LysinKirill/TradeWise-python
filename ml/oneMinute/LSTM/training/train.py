@@ -18,7 +18,8 @@ def train_model(
     scaler: Normalizer,
     device: str,
     logger: Logger,
-    save_best_model: bool = True
+    model_name: str,
+    save_best_model: bool = True,
 ) -> None:
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
     best_val_loss = float('inf')
@@ -53,5 +54,8 @@ def train_model(
 
         if save_best_model and val_metrics['test_loss'] < best_val_loss:
             best_val_loss = val_metrics['test_loss']
-            torch.save(model.state_dict(), '../best_lstm.pth')
-            logger.info("Saved new best model!")
+
+            torch.save(model.state_dict(), f'../savedModels/{model_name}.pth')
+            with open(f'../savedModels/{model_name}_normalizer.txt', 'w') as f:
+                f.write(f"{scaler.min} {scaler.max}")
+            logger.info(f"Saved new best model! Model saved in ../savedModels/{model_name}.pth")
