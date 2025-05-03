@@ -45,14 +45,14 @@ def load_migration_classes():
             if isinstance(attr, type) and getattr(attr, "_is_migration", False):
                 migration_classes.append(attr)
 
-    return migration_classes
+    return list(sorted(migration_classes, key=lambda cls: cls.version))
 
 def get_connection_string(user: str, password: str, host: str, port: int, dbname: str) -> str:
     return f"postgresql+psycopg://{user}:{password}@{host}:{port}/{dbname}"
 
 def should_apply_migration(migration_info: list[MigrationInfo], migration_version: int) -> bool:
     return not any(
-        [migration.version == migration_version and migration.applied_on is not None] for migration in migration_info)
+        (migration.version == migration_version and migration.applied_on is not None) for migration in migration_info)
 
 def log_migrations_info(logger, migrations, annotation: str | None = None) -> None:
     """Log migration information using the logging library."""
