@@ -10,6 +10,7 @@ class _20250503_0300_create_models_table(ForwardMigration):
             sql='''
             CREATE TABLE IF NOT EXISTS models (
                 id SERIAL PRIMARY KEY,
+                instrument_id TEXT NOT NULL,
                 name TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 model_bytes BYTEA NOT NULL,
