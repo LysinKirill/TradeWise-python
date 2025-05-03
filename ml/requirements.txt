@@ -4,8 +4,8 @@ scipy==1.15.2
 scikit-learn==1.6.1
 
 # PyTorch ecosystem
-torch==2.7.0+cu128
-#torch==2.7.0
+#torch==2.7.0+cu128
+torch==2.7.0
 torchvision==0.22.0
 torchaudio==2.7.0
 
@@ -17,3 +17,4 @@ DateTime==5.5
 matplotlib==3.10.1
 scikit-learn~=1.6.1
 torchmetrics~=1.7.1
+seaborn~=0.13.2

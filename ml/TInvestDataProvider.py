@@ -1,13 +1,12 @@
 import pandas as pd
 import asyncio
+import logging
 
 from datetime import datetime, timedelta
 from typing import Optional, List
 from grpc import aio, ssl_channel_credentials
 from google.protobuf.timestamp_pb2 import Timestamp
 
-
-import instruments_pb2
 import instruments_pb2_grpc
 from externalClients.TInvestApi.proto import marketdata_pb2_grpc
 from externalClients.TInvestApi.proto.marketdata_pb2 import (
@@ -27,8 +26,16 @@ from externalClients.TInvestApi.proto.instruments_pb2 import (
     InstrumentIdType
 )
 
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    stream=sys.stdout
+)
+
 class TInvestDataProvider:
     def __init__(self, api_key: str, prod_endpoint: str = "invest-public-api.tinkoff.ru:443"):
+        self.logger = logging.getLogger("[DataProvider]")
         self.api_key = api_key
         self.endpoint = prod_endpoint
         self.channel = None
@@ -180,7 +187,8 @@ class TInvestDataProvider:
         train_period_end_utc: datetime,
         instrument_id: str,
         target_candle_count: int = DEFAULT_CANDLE_COUNT,
-        rate_limiter_delay_seconds: float = DEFAULT_RATE_LIMITER_DELAY
+        rate_limiter_delay_seconds: float = DEFAULT_RATE_LIMITER_DELAY,
+        verbose: bool = False
     ) -> pd.DataFrame:
         timestep = timedelta(hours=40)
 
@@ -191,7 +199,8 @@ class TInvestDataProvider:
 
         try:
             while True:
-                print(f"Step {step_count}. ", end="")
+                if verbose:
+                    self.logger.info(f"Step {step_count}. ")
                 step_count += 1
                 current_start = current_end - timestep
 
@@ -209,21 +218,23 @@ class TInvestDataProvider:
 
                 if len(df) >= target_candle_count:
                     df = df.iloc[-target_candle_count:]
-                    print(f"Current df shape: {df.shape}")
+                    if verbose:
+                        self.logger.info(f"Current df shape: {df.shape}")
                     break
 
                 current_end = current_start
-                print(f"Current df shape: {df.shape}; new candles fetched = {new_df.shape[0]}")
+                if verbose:
+                    self.logger.info(f"Current df shape: {df.shape}; new candles fetched = {new_df.shape[0]}")
                 await asyncio.sleep(rate_limiter_delay_seconds)
         except Exception as e:
-            print(f"Unable to fetch data {e}")
+            self.logger.error(f"Unable to fetch data {e}")
             last_request_sent = {
                 "instrument_id": instrument_id,
                 "from_time": current_start,
                 "to_time": current_end,
                 "interval": CandleInterval.CANDLE_INTERVAL_1_MIN
             }
-            print(f"Last executed request: {last_request_sent}")
+            self.logger.error(f"Last executed request: {last_request_sent}")
 
         return df
 
@@ -240,7 +251,8 @@ class TInvestDataProvider:
         period_start_utc: datetime,
         period_end_utc: datetime,
         instrument_id: str,
-        rate_limiter_delay_seconds: float = DEFAULT_RATE_LIMITER_DELAY
+        rate_limiter_delay_seconds: float = DEFAULT_RATE_LIMITER_DELAY,
+        verbose: bool = False
     ) -> pd.DataFrame:
         timestep = timedelta(hours=40)
 
@@ -255,7 +267,8 @@ class TInvestDataProvider:
                     current_start = period_start_utc
                     flag = False
                 current_start = current_end - timestep
-                print(f"Fetching data for interval {current_start} - {current_end}. ", end="")
+                if verbose:
+                    self.logger.info(f"Fetching data for interval {current_start} - {current_end}. ", end="")
 
                 new_df = await self.get_historical_candles(
                     instrument_id="e6123145-9665-43e0-8413-cd61b8aa9b13",
@@ -270,16 +283,17 @@ class TInvestDataProvider:
                     df = pd.concat([new_df, df])
 
                 current_end = current_start
-                print(f"Current df shape: {df.shape}; new candles fetched = {new_df.shape[0]}\n")
+                if verbose:
+                    self.logger.info(f"Current df shape: {df.shape}; new candles fetched = {new_df.shape[0]}\n")
                 await asyncio.sleep(rate_limiter_delay_seconds)
         except Exception as e:
-            print(f"Unable to fetch data {e}")
+            self.logger.error(f"Unable to fetch data {e}")
             last_request_sent = {
                 "instrument_id": instrument_id,
                 "from_time": current_start,
                 "to_time": current_end,
                 "interval": CandleInterval.CANDLE_INTERVAL_1_MIN
             }
-            print(f"Last executed request: {last_request_sent}")
+            self.logger.error(f"Last executed request: {last_request_sent}")
 
         return df

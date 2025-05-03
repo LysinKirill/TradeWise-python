@@ -4,9 +4,15 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 import logging
 import sys
+import pandas as pd
+import seaborn as sns
+
 
 from datetime import datetime
+from itertools import product
 from ml.TInvestDataProvider import TInvestDataProvider
+from ml.dataAugmentation.Normalizer import Normalizer
+from ml.oneMinute.LSTM.simulation.GridSearchResult import GridSearchResult
 from ml.oneMinute.LSTM.simulation.SimulationResult import SimulationResult
 from ml.oneMinute.LSTM.simulation.SimulationStatistics import SimulationStatistics
 
@@ -23,18 +29,22 @@ class TradingSimulator:
             self,
             invest_api_key: str,
             model: nn.Module,
+            scaler: Normalizer,
+            instrument_id: str
     ):
         self.logger = logging.getLogger("[SIMULATOR]")
         self.model = model
         self.invest_api_key = invest_api_key
+        self.instrument_id = instrument_id
+        self.scaler = scaler
         self.close_data: np.ndarray | None = None
         self.lot_size: int | None = None
         self.last_simulation_stats: SimulationStatistics | None = None
+        self.grid_search_result: GridSearchResult | None = None
         return
 
     async def load_data(
             self,
-            instrument_id: str,
             start_timestamp_utc: datetime,
             end_timestamp_utc: datetime
     ) -> None:
@@ -42,33 +52,47 @@ class TradingSimulator:
         df = await provider.load_candle_data_for_period(
             period_start_utc=start_timestamp_utc,
             period_end_utc=end_timestamp_utc,
-            instrument_id=instrument_id
+            instrument_id=self.instrument_id
         )
 
-        self.lot_size = (await provider.get_instrument_info(instrument_id=instrument_id)).lot
+        self.lot_size = (await provider.get_instrument_info(instrument_id=self.instrument_id)).lot
         await provider.close()
         self.close_data = df['close'].to_numpy()
 
-
     async def simulate_trading(
-        self,
-        scaler,
-        device,
-        instrument_id: str,
-        start_timestamp_utc: datetime,
-        end_timestamp_utc: datetime,
-        initial_balance=10000,
-        commission=0.0005,
-        lookback=16,
-        buy_signal=0.001,
-        sell_signal=0.003
+            self,
+            device,
+            start_timestamp_utc: datetime,
+            end_timestamp_utc: datetime,
+            initial_balance=10000,
+            commission=0.0005,
+            lookback=16,
+            buy_signal=0.001,
+            sell_signal=0.003
     ) -> SimulationResult:
         await self.load_data(
-            instrument_id=instrument_id,
             start_timestamp_utc=start_timestamp_utc,
             end_timestamp_utc=end_timestamp_utc
         )
 
+        return await self.simulate_trading_with_stored_data(
+            device=device,
+            initial_balance=initial_balance,
+            commission=commission,
+            lookback=lookback,
+            buy_signal=buy_signal,
+            sell_signal=sell_signal
+        )
+
+    async def simulate_trading_with_stored_data(
+        self,
+        device,
+        initial_balance: float=10000,
+        commission: float=0.0005,
+        lookback: int=16,
+        buy_signal: float=0.001,
+        sell_signal: float=0.003
+    ) -> SimulationResult:
         self.model.eval()
 
         balance = initial_balance
@@ -80,7 +104,7 @@ class TradingSimulator:
         sell_signals = []
         commission_paid_total = 0
 
-        normalized_data = scaler.transform(self.close_data.reshape(-1, 1)).flatten()
+        normalized_data = self.scaler.transform(self.close_data.reshape(-1, 1)).flatten()
 
         for i in range(lookback, len(self.close_data) - 1):
             current_price = self.close_data[i]
@@ -91,7 +115,7 @@ class TradingSimulator:
 
             with torch.no_grad():
                 pred = self.model(seq).cpu().numpy()[0]
-                pred_price = scaler.inverse_transform(np.array([[pred]]))[0][0]
+                pred_price = self.scaler.inverse_transform(np.array([[pred]]))[0][0]
 
             expected_return = (pred_price - current_price) / current_price
 
@@ -207,3 +231,101 @@ class TradingSimulator:
 
         plt.tight_layout()
         plt.show()
+
+
+    async def grid_search_trading_params(
+        self,
+        device: str,
+        buy_thresholds: np.ndarray,
+        sell_thresholds: np.ndarray,
+        period_start_utc: datetime | None,
+        period_end_utc: datetime | None,
+        initial_balance: float = 10000,
+        verbose: bool = True
+    ) -> GridSearchResult:
+        if period_start_utc is None or period_end_utc is None:
+            if period_start_utc is not None or period_end_utc is not None:
+                raise ValueError("Period start and period end have to either both be None or both be present")
+            self.logger.warning("Using previously set period start and period end for grid search.")
+        else:
+            await self.load_data(
+                start_timestamp_utc=period_start_utc,
+                end_timestamp_utc=period_end_utc,
+            )
+
+        results = []
+
+        for buy_signal, sell_signal in product(buy_thresholds, sell_thresholds):
+            if verbose:
+                self.logger.info(f"Processing signal thresholds: {buy_signal=:.4f}, {sell_signal=:.4f}. ")
+
+            try:
+                simulation_result = await self.simulate_trading_with_stored_data(
+                    device=device,
+                    initial_balance=initial_balance,
+                    commission=0.0005,
+                    lookback=16,
+                    buy_signal=buy_signal,
+                    sell_signal=sell_signal
+                )
+
+                returns_pct = simulation_result.total_return * 100
+
+                if verbose:
+                    self.logger.info(f"Returns percentage: {returns_pct=:.4f}%\t[{'↓' if returns_pct < 0 else '↑'}]")
+
+                results.append({
+                    'buy_signal': buy_signal,
+                    'sell_signal': sell_signal,
+                    'returns_pct': returns_pct,
+                    'signal_ratio': sell_signal / buy_signal
+                })
+
+            except Exception as e:
+                self.logger.error(f"Failed for buy={buy_signal:.4f}, sell={sell_signal:.4f}: {str(e)}")
+
+
+        results_df = pd.DataFrame(results)
+        if not results_df.empty:
+            best = results_df.loc[results_df['returns_pct'].idxmax()]
+            if verbose:
+                self.logger.info(f"\nBest parameters: buy={best['buy_signal']:.4f}, sell={best['sell_signal']:.4f}")
+                self.logger.info(f"Expected return: {best['returns_pct']:.2f}%")
+
+            result = GridSearchResult(
+                search_df=results_df,
+                best_buy_signal=best['buy_signal'],
+                best_sell_signal=best['sell_signal'],
+                best_return_pct=best['returns_pct']
+            )
+            self.grid_search_result = result
+            return result
+
+
+    def plot_grid_search_results(self) -> None:
+        if self.grid_search_result is None:
+            self.logger.warning("No grid search results found. Run grid search first.")
+            return
+
+        results_df = self.grid_search_result.search_df
+        if not results_df.empty:
+            plt.figure(figsize=(12, 8))
+
+            pivot_df = results_df.pivot_table(
+                values='returns_pct',
+                index='buy_signal',
+                columns='sell_signal'
+            )
+
+            sns.heatmap(
+                data=pivot_df,
+                annot=True,
+                fmt=".1f",
+                cmap="RdYlGn",
+                cbar_kws={'label': 'Returns (%)'}
+            )
+            plt.title("Returns by Buy/Sell Thresholds")
+            plt.xlabel("Sell Signal Threshold")
+            plt.ylabel("Buy Signal Threshold")
+            plt.tight_layout()
+            plt.show()
