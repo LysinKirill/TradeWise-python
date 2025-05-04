@@ -9,14 +9,33 @@ import "google/protobuf/timestamp.proto";
 service InvestService {
   rpc GetSupportedInstruments(google.protobuf.Empty) returns (GetSupportedInstrumentsResponse) {}
   rpc GetInstrumentStat(GetInstrumentStatRequest) returns (GetInstrumentStatResponse) {}
+  rpc GetCandles(GetCandlesRequest) returns (GetCandlesResponse) {}
 }
 
+
+message GetCandlesRequest {
+  string instrument_id = 1;
+  google.protobuf.Timestamp from = 2;
+  google.protobuf.Timestamp to = 3;
+}
+
+message GetCandlesResponse {
+  repeated Candle candles = 1;
+}
+
+message Candle {
+  google.protobuf.Timestamp timestamp = 1;
+  float open = 2;
+  float high = 3;
+  float low = 4;
+  float close = 5;
+}
 
 message GetInstrumentStatRequest {
   string instrument_id = 1;
   StatType stat_type = 2;
-  google.protobuf.Timestamp from = 3; // defaults to now()
-  google.protobuf.Timestamp to = 4;   // defaults to now() - 5 min
+  google.protobuf.Timestamp from = 3; // defaults to now() - 5 min
+  google.protobuf.Timestamp to = 4;   // defaults to now()
 }
 
 message GetInstrumentStatResponse {

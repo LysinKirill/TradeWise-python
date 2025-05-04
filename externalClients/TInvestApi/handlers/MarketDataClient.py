@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 import grpc
 
 from app.domain.models.invest.InstrumentStatType import InstrumentStatType
-from app.domain.models.invest.requests import GetInstrumentStatRequestModel
+from app.domain.models.invest.requests import GetInstrumentStatRequestModel, GetCandlesRequestModel
 from externalClients.TInvestApi.handlers.BaseClient import BaseClient
 from externalClients.TInvestApi.proto import (
     marketdata_pb2, marketdata_pb2_grpc,
@@ -16,6 +16,21 @@ class MarketDataClient(BaseClient):
         super().__init__(endpoint, api_key)
         self.stub = marketdata_pb2_grpc.MarketDataServiceStub(self.channel)
 
+    async def get_candles(self, request: GetCandlesRequestModel.GetCandlesRequestModel) -> list[(float, float, float, float, datetime)]:
+        invest_api_request = marketdata_pb2.GetCandlesRequest(
+            instrument_id=request.instrument_id,
+            to=request.to,
+            interval=marketdata_pb2.CandleInterval.CANDLE_INTERVAL_1_MIN
+        )
+        setattr(invest_api_request, "from", request.from_)
+
+        response = await self.stub.GetCandles(invest_api_request, metadata=self.get_metadata())
+        return [(
+            MarketDataClient.__quotation_to_float(candle.open),
+            MarketDataClient.__quotation_to_float(candle.high),
+            MarketDataClient.__quotation_to_float(candle.low),
+            MarketDataClient.__quotation_to_float(candle.close),
+            candle.time.ToDatetime()) for candle in response.candles]
 
     async def get_instrument_stat(self, request: GetInstrumentStatRequestModel.GetInstrumentStatRequestModel) -> float | None:
         if request.stat_type == InstrumentStatType.Unknown: return None
