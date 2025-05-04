@@ -3,6 +3,7 @@ import grpc
 from app.debug.ExceptionLogger import exception_logging
 from app.domain.models.invest import InstrumentModel
 from app.domain.models.invest.InstrumentStatType import InstrumentStatType
+from app.domain.models.invest.requests.GetCandlesRequestModel import GetCandlesRequestModel
 from app.domain.models.invest.requests.GetInstrumentStatRequestModel import GetInstrumentStatRequestModel
 from app.domain.services.IInvestService import IInvestService
 from app.infrastructure.JwtAuthorizationDecorator import jwt_authorization
@@ -26,6 +27,25 @@ class InvestGrpcService(invest_pb2_grpc.InvestServiceServicer):
         response = await self.invest_service.get_supported_instruments()
         return invest_pb2.GetSupportedInstrumentsResponse(instruments=
         [InvestGrpcService.__get_instrument_from_model(instrument) for instrument in response.instruments])
+
+    @exception_logging
+    @request_response_logging()
+    @jwt_authorization
+    async def GetCandles(self, request, context):
+        request_model = GetCandlesRequestModel(
+            instrument_id=request.instrument_id,
+            from_=getattr(request, "from").ToDatetime() if request.HasField("from") else None,
+            to=request.to.ToDatetime() if request.HasField("to") else None
+        )
+        response = await self.invest_service.get_candles(request_model)
+        return invest_pb2.GetCandlesResponse(candles=
+        [invest_pb2.Candle(
+            timestamp=candle.timestamp,
+            open=candle.open,
+            high=candle.high,
+            low=candle.low,
+            close=candle.close
+        ) for candle in response.candles])
 
     @exception_logging
     @request_response_logging()

@@ -6,7 +6,7 @@ import warnings
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 from app.proto import invest_pb2 as invest__pb2
 
-GRPC_GENERATED_VERSION = '1.69.0'
+GRPC_GENERATED_VERSION = '1.71.0'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -45,6 +45,11 @@ class InvestServiceStub(object):
                 request_serializer=invest__pb2.GetInstrumentStatRequest.SerializeToString,
                 response_deserializer=invest__pb2.GetInstrumentStatResponse.FromString,
                 _registered_method=True)
+        self.GetCandles = channel.unary_unary(
+                '/invest.InvestService/GetCandles',
+                request_serializer=invest__pb2.GetCandlesRequest.SerializeToString,
+                response_deserializer=invest__pb2.GetCandlesResponse.FromString,
+                _registered_method=True)
 
 
 class InvestServiceServicer(object):
@@ -62,6 +67,12 @@ class InvestServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetCandles(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_InvestServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -74,6 +85,11 @@ def add_InvestServiceServicer_to_server(servicer, server):
                     servicer.GetInstrumentStat,
                     request_deserializer=invest__pb2.GetInstrumentStatRequest.FromString,
                     response_serializer=invest__pb2.GetInstrumentStatResponse.SerializeToString,
+            ),
+            'GetCandles': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetCandles,
+                    request_deserializer=invest__pb2.GetCandlesRequest.FromString,
+                    response_serializer=invest__pb2.GetCandlesResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -130,6 +146,33 @@ class InvestService(object):
             '/invest.InvestService/GetInstrumentStat',
             invest__pb2.GetInstrumentStatRequest.SerializeToString,
             invest__pb2.GetInstrumentStatResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetCandles(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/invest.InvestService/GetCandles',
+            invest__pb2.GetCandlesRequest.SerializeToString,
+            invest__pb2.GetCandlesResponse.FromString,
             options,
             channel_credentials,
             insecure,
