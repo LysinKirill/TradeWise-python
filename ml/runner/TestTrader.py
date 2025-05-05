@@ -180,10 +180,14 @@ class StockTrader:
                 order_id=str(datetime.now().timestamp())  # Simple unique ID
             )
 
+            self.logger.info(f"Place order request: {request}")
+
             response = await self.orders_stub.PostOrder(
                 request,
                 metadata=self._get_metadata()
             )
+
+            self.logger.info(f"Place order response: {response}")
 
             if response.execution_report_status in [
                 orders_pb2.OrderExecutionReportStatus.EXECUTION_REPORT_STATUS_FILL,
@@ -231,7 +235,6 @@ class StockTrader:
                 self.logger.warning(f"Unable to get current price. Skipping trading cycle. timestamp={datetime.now()}")
                 await asyncio.sleep(self.request_interval.seconds)
                 return
-            self.logger.info(f"Current price: {current_price}")
             self.price_history.append(current_price)
             self.plot_data['prices'].append(current_price)
 
@@ -283,7 +286,7 @@ class StockTrader:
             total_value = self.current_balance + position_value
             self.plot_data['values'].append(total_value)
 
-            self.update_plot()
+            # self.update_plot()
 
         except Exception as e:
             self.logger.error(f"Error in trading cycle: {str(e)}")

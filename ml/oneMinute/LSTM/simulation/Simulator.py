@@ -68,7 +68,8 @@ class TradingSimulator:
             commission=0.0005,
             lookback=16,
             buy_signal=0.001,
-            sell_signal=0.003
+            sell_signal=0.003,
+            verbose: bool = False,
     ) -> SimulationResult:
         await self.load_data(
             start_timestamp_utc=start_timestamp_utc,
@@ -81,7 +82,8 @@ class TradingSimulator:
             commission=commission,
             lookback=lookback,
             buy_signal=buy_signal,
-            sell_signal=sell_signal
+            sell_signal=sell_signal,
+            verbose=verbose
         )
 
     async def simulate_trading_with_stored_data(
@@ -91,7 +93,8 @@ class TradingSimulator:
         commission: float=0.0005,
         lookback: int=16,
         buy_signal: float=0.001,
-        sell_signal: float=0.003
+        sell_signal: float=0.003,
+        verbose: bool=False
     ) -> SimulationResult:
         self.model.eval()
 
@@ -105,9 +108,11 @@ class TradingSimulator:
         commission_paid_total = 0
 
         normalized_data = self.scaler.transform(self.close_data.reshape(-1, 1)).flatten()
+        current_candle = 1
+
 
         for i in range(lookback, len(self.close_data) - 1):
-            current_price = self.close_data[i]
+            current_price = self.close_data[i - 1]
             price_history.append(current_price)
 
             seq = normalized_data[i - lookback:i].reshape(1, lookback, 1)
@@ -118,7 +123,9 @@ class TradingSimulator:
                 pred_price = self.scaler.inverse_transform(np.array([[pred]]))[0][0]
 
             expected_return = (pred_price - current_price) / current_price
-
+            if verbose:
+                self.logger.info(f"Candle #{current_candle}: Current price = {current_price:.3f}, Predicted price = {pred_price:.3f}, expected return: {expected_return:.5f}.  DATA: {normalized_data[i - lookback:i].reshape(1, lookback, 1)}")
+            current_candle += 1
             # Trading decision logic - SIMPLIFIED VERSION
             if expected_return > buy_signal:  # Strong buy signal
                 if shares_owned == 0:  # Only buy if we don't own shares
@@ -266,7 +273,8 @@ class TradingSimulator:
                     commission=0.0005,
                     lookback=16,
                     buy_signal=buy_signal,
-                    sell_signal=sell_signal
+                    sell_signal=sell_signal,
+                    verbose=verbose,
                 )
 
                 returns_pct = simulation_result.total_return * 100

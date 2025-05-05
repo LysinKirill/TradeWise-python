@@ -125,7 +125,10 @@ class TInvestDataProvider:
                 'source': candle.candle_source
             })
 
-        return pd.DataFrame(candles).set_index('time')
+        df = pd.DataFrame(candles)
+        df.sort_values(by=['time'], inplace=True)
+
+        return df
 
     async def subscribe_to_candles(
         self,
@@ -264,10 +267,11 @@ class TInvestDataProvider:
 
         try:
             while flag:
+                current_start = current_end - timestep
                 if current_start < period_start_utc:
                     current_start = period_start_utc
                     flag = False
-                current_start = current_end - timestep
+
                 if verbose:
                     self.logger.info(f"Fetching data for interval {current_start} - {current_end}. ", end="")
 

@@ -59,3 +59,4 @@ def train_model(
             with open(f'../savedModels/{model_name}_normalizer.txt', 'w') as f:
                 f.write(f"{scaler.min} {scaler.max}")
             logger.info(f"Saved new best model! Model saved in ../savedModels/{model_name}.pth")
+    torch.save(model.state_dict(), f'../savedModels/{model_name}_LAST.pth')
