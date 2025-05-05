@@ -60,7 +60,7 @@ class InvestGrpcService(invest_pb2_grpc.InvestServiceServicer):
         response = await self.invest_service.get_instrument_stat(request_model)
 
         if response.stat_value is None:
-            context.abort(
+            await context.abort(
                 grpc.StatusCode.NOT_FOUND,
                 f"Unable to get value of stat \"{request_model.stat_type.name}\" for instrument \"{request_model.instrument_id}\" for the given period"
             )

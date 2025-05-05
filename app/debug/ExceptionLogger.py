@@ -22,5 +22,5 @@ def exception_logging(func):
                 logger.error(f"RPC Exception: Status code: {context.code()}, Details: {context.details()}")
                 raise
             logger.error(f"Exception in {func.__name__}: {e}")
-            context.abort(grpc.StatusCode.INTERNAL, f"Internal error occurred: {str(e)}")
+            await context.abort(grpc.StatusCode.INTERNAL, f"Internal error occurred: {str(e)}")
     return wrapper
