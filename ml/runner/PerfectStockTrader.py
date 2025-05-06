@@ -1,4 +1,6 @@
 import logging
+from collections.abc import AsyncGenerator
+
 import numpy as np
 import torch
 import asyncio
@@ -15,7 +17,7 @@ from ml.oneMinute.LSTM.configuration.LstmConfiguration import LstmConfiguration
 from ml.runner.configuration.TradingConfiguration import TradingConfiguration
 
 
-class StockTrader:
+class PerfectStockTrader:
     def __init__(
             self,
             model_configuration: LstmConfiguration,  # TODO: replace with supertype for model configuration
@@ -79,7 +81,7 @@ class StockTrader:
             )
 
 
-    async def trading_cycle(self, current_candle: Candle):
+    async def trading_cycle(self, current_candle: Candle, next_candle: Candle):
         """Perform one trading decision cycle"""
         #self.logger.info(f"Trading cycle started. Timestamp = {datetime.now()}")
         try:
@@ -104,9 +106,15 @@ class StockTrader:
                 np.array(self.price_history).reshape(-1, 1))
             seq = torch.FloatTensor(normalized_data).unsqueeze(0).to(self.device)
 
-            with torch.no_grad():
-                pred = self.model(seq).cpu().numpy()[0]
-                pred_price = self.scaler.inverse_transform(np.array([[pred]]))[0][0]
+            # with torch.no_grad():
+                # pred = self.model(seq).cpu().numpy()[0]
+                #pred_price = self.scaler.inverse_transform(np.array([[pred]]))[0][0]
+
+            #uniform_random = np.random.uniform(low=-0.001, high=0.001)
+            #normal_random = np.random.normal(loc=0.001, scale=0.001 / 3)
+
+            #pred_price = next_candle.close * (1 + float(normal_random))
+            pred_price = next_candle.close
 
             expected_return = (pred_price - current_price) / current_price
             trade_available = await self.trading_window_manager.check_trade_available(
@@ -171,19 +179,34 @@ class StockTrader:
             self.logger.error(f"Error in trading cycle: {str(e)}")
             traceback.print_exc()
 
+    @staticmethod
+    async def anext_or_none(generator: AsyncGenerator):
+        try:
+            return await anext(generator)
+        except StopAsyncIteration:
+            return None
 
     async def start_trading(self):
         """Start the continuous trading loop"""
         self.logger.info("Starting trading bot...")
         self.iterations = 0
+        next_candle_generator = self.candle_source.generate_candles(
+            self.instrument_id,
+            preload_candles_count=self.lookback
+        )
+        await anext(next_candle_generator)
         async for candle in self.candle_source.generate_candles(self.instrument_id, preload_candles_count=self.lookback):
             try:
+                next_candle = await PerfectStockTrader.anext_or_none(next_candle_generator)
+                if next_candle is None:
+                    next_candle = candle
+
                 self.iterations += 1
                 if candle is None:
                     self.logger.warning("Received no candle from candle source! Skipping trading cycle. timestamp={datetime.now()}")
                     continue
 
-                await self.trading_cycle(candle)
+                await self.trading_cycle(candle, next_candle)
             except KeyboardInterrupt:
                 self.logger.info("\nGracefully shutting down trading bot...")
                 break

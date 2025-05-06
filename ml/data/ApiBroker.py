@@ -79,6 +79,8 @@ class ApiBroker(IBroker):
             shares=shares,
         )
 
+    async def get_portfolio_value(self, current_price: float | None = None) -> float | None:
+        return None
 
     async def place_order(
             self,

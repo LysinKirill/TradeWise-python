@@ -24,6 +24,9 @@ class TestBroker(IBroker):
     async def get_portfolio(self) -> GetPortfolioResponse:
         return GetPortfolioResponse(self.balance, self.shares)
 
+    async def get_portfolio_value(self, current_price: float | None = None) -> float | None:
+        return self.balance + self.shares * current_price * (1 - self.commission)
+
     async def place_order(self, operation: OperationType, quantity: int, expected_price: float | None = None):
         self.total_trades += 1
         if operation == OperationType.Buy:

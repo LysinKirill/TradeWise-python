@@ -14,6 +14,10 @@ class IBroker(ABC):
         pass
 
     @abstractmethod
+    async def get_portfolio_value(self, current_price: float | None = None) -> float | None:
+        pass
+
+    @abstractmethod
     async def place_order(
             self,
             operation: OperationType,

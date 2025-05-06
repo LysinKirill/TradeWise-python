@@ -31,7 +31,14 @@ class HistoryCandleGenerator(ICandleGenerator):
             instrument_id=self.instrument_id
         )
         await provider.close()
-        self.candle_data = [Candle(close=x.close, timestamp=x.time) for x in df[['close', 'time']].itertuples()]
+        self.candle_data = [Candle(
+            open=x.open,
+            close=x.close,
+            high=x.high,
+            low=x.low,
+            volume=x.volume,
+            timestamp=x.time
+        ) for x in df[['open', 'close', 'high', 'low', 'volume', 'time']].itertuples()]
 
 
     async def generate_candles(
@@ -40,7 +47,6 @@ class HistoryCandleGenerator(ICandleGenerator):
         preload_candles_count: int = 0,
         stop_event: asyncio.Event | None = None
     ) -> AsyncGenerator[Candle | None, None]:
-        await self.load_data()
-
+        #await self.load_data()
         for candle in self.candle_data:
             yield candle
