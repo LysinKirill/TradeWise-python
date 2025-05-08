@@ -9,4 +9,5 @@ class TrainingConfiguration:
     train_period_end_utc: datetime
     batch_size: int
     epochs: int
+    learning_rate: float
 

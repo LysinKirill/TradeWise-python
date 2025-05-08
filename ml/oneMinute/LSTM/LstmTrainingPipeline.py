@@ -63,6 +63,7 @@ class TrainingPipeline:
                 self.logger.error(f"Failed to run pipeline step {pipeline_step.__name__}!\n"
                                   f"Resetting pipeline state...")
                 self.reset()
+                raise
                 break
 
     def reset(self):
@@ -108,7 +109,27 @@ class TrainingPipeline:
             await provider.close()
 
     def preprocess_training_data(self) -> None:
-        self.training_df['close_normalized'] = self.scaler.fit_transform(self.training_df[['close']].values)
+        df = self.training_df.copy()  # Work on a copy to avoid SettingWithCopyWarning
+
+        # Create time-delayed features
+        df['prev_open'] = df['open'].shift(1)
+        df['prev_close'] = df['close'].shift(1)
+        df = df.dropna()
+
+        # Select and normalize features
+        #features = df[['close', 'prev_open']].values  # Convert to numpy array
+        features = df[['close']].values  # Convert to numpy array
+        normalized_features = self.scaler.fit_transform(features)
+
+        # Store normalized features properly
+        self.training_df = df.assign(
+            normalized_features=list(normalized_features)  # Convert to list of arrays
+        )
+        #features = self.training_df[['open', 'high', 'low', 'close', 'volume']].values
+        #features = self.training_df[['close']].values
+        #features = self.training_df[['close', 'high']].values
+        #self.training_df['normalized_features'] = list(self.scaler.fit_transform(features))
+
 
     def setup_dataset(self) -> None:
         training_dataset = SequenceDataset(self.training_df, seq_length=self.training_configuration.sequence_length)
@@ -125,6 +146,7 @@ class TrainingPipeline:
 
     def train_model(self) -> None:
         logger = logging.getLogger("[LSTM_ONE_MINUTE_TRAIN]")
+        optimizer = torch.optim.Adam(self.model.parameters(), lr=self.training_configuration.learning_rate)
         train_model_internal(
             model=self.model,
             training_configuration=self.training_configuration,
@@ -135,6 +157,7 @@ class TrainingPipeline:
             device=self.device,
             logger=logger,
             model_name="LSTM_ONE_MINUTE",
+            optimizer=optimizer,
             save_best_model=True
         )
 

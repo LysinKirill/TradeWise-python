@@ -13,6 +13,7 @@ class StockPriceLstm(nn.Module):
             input_size=configuration.input_size,
             hidden_size=configuration.hidden_layer_size,
             num_layers=configuration.num_layers,
+            dropout=configuration.dropout,
             batch_first=True
         )
         self.fc = nn.Linear(configuration.hidden_layer_size, configuration.output_size)

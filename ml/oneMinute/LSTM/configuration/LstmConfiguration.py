@@ -7,4 +7,5 @@ class LstmConfiguration:
     num_layers: int
     criterion: any
     output_size: int = 1
+    dropout: float = 0.0
 

@@ -57,7 +57,7 @@ class StockTrader:
         # State tracking
         self.current_balance: float = 0.0
         self.current_shares: int = 0
-        self.price_history: list[float] = []
+        self.candle_history: list[Candle] = []
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
         self.model.eval().to(self.device)
@@ -71,11 +71,11 @@ class StockTrader:
         saved_normalizer_path: str
     ):
         self.model.load_state_dict(torch.load(saved_model_path))
-        with open(saved_normalizer_path, 'rb') as f:
-            params = list(map(float, f.readline().split()))
+        with open(saved_normalizer_path, 'r') as f:
+            params = [np.fromstring(s.replace('[', '').replace(']', ''), sep=" ") for s in f.readlines()]
             self.scaler = Normalizer(
-                min_val=params[0],
-                max_val=params[1],
+                mins=params[0],
+                maxs=params[1],
             )
 
 
@@ -91,22 +91,32 @@ class StockTrader:
 
             current_price = current_candle.close
 
-            self.price_history.append(current_price)
+            self.candle_history.append(current_candle)
 
             # Keep only recent prices for our lookback window
-            if len(self.price_history) > self.lookback:
-                self.price_history = self.price_history[-self.lookback:]
+            if len(self.candle_history) > self.lookback:
+                self.candle_history = self.candle_history[-self.lookback:]
             else:
-                self.logger.info(f"Not enough price history [{len(self.price_history)}]. Skipping trading cycle")
+                self.logger.info(f"Not enough price history [{len(self.candle_history)}]. Skipping trading cycle")
                 return
 
-            normalized_data = self.scaler.transform(
-                np.array(self.price_history).reshape(-1, 1))
+            # features = np.array([
+            #     [candle.open, candle.high, candle.low, candle.close, candle.volume]
+            #     for candle in self.candle_history
+            # ])
+            features = np.array([
+                [candle.close]
+                for candle in self.candle_history
+            ])
+
+            normalized_data = self.scaler.transform(features)
             seq = torch.FloatTensor(normalized_data).unsqueeze(0).to(self.device)
 
             with torch.no_grad():
                 pred = self.model(seq).cpu().numpy()[0]
-                pred_price = self.scaler.inverse_transform(np.array([[pred]]))[0][0]
+                pred_price = self.scaler.inverse_transform(
+                    np.array([[pred, pred, pred, pred, 0]])
+                )[0][3]
 
             expected_return = (pred_price - current_price) / current_price
             trade_available = await self.trading_window_manager.check_trade_available(

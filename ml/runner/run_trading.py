@@ -69,7 +69,7 @@ async def main():
 ### -----------------------------TEST-------------------------------
     #now = datetime(year=2025, month=5, day=4, hour=12, minute=0, second=0, microsecond=0)
     now = datetime.now(timezone.utc)
-    test_start = now - timedelta(days=100)
+    test_start = now - timedelta(days=60)
     test_end = now - timedelta(days=0)
 
     test_trading_window_manager = PresetTradingWindowManager(
