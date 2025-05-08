@@ -1,5 +1,6 @@
 import pydapper
 
+from contextlib import asynccontextmanager
 from pydapper.commands import CommandsAsync
 from dataAccess.interfaces.IPgConnectionProvider import IPgConnectionProvider
 from typing import AsyncIterator
@@ -20,6 +21,8 @@ class PgConnectionProvider(IPgConnectionProvider):
         self.port = port
         self.db = db
 
+
+    @asynccontextmanager
     async def get_connection(self) -> AsyncIterator[CommandsAsync]:
         async with pydapper.connect_async(
             PgConnectionProvider._get_connection_string(
