@@ -1,0 +1,16 @@
+{
+    "id": null,
+    "instrument_id": "509edd0c-129c-4ee2-934d-7f6246126da1",
+    "name": "NORNICKEL_one_minute_16_lookback",
+    "model_type": "LSTM",
+    "created_at": "2025-05-09T14:30:00",
+    "model_configuration": {
+        "input_size": 1,
+        "hidden_layer_size": 32,
+        "num_layers": 1,
+        "output_size": 1,
+        "dropout": 0
+    },
+    "normalizer_mins": [],
+    "normalizer_maxs": []
+}

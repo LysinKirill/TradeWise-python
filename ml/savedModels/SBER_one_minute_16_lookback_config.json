@@ -1,0 +1,16 @@
+{
+    "id": null,
+    "instrument_id": "e6123145-9665-43e0-8413-cd61b8aa9b13",
+    "name": "SBER_one_minute_16_lookback",
+    "model_type": "LSTM",
+    "created_at": "2025-05-09T14:30:00",
+    "model_configuration": {
+        "input_size": 1,
+        "hidden_layer_size": 32,
+        "num_layers": 1,
+        "output_size": 1,
+        "dropout": 0
+    },
+    "normalizer_mins": [],
+    "normalizer_maxs": []
+}
