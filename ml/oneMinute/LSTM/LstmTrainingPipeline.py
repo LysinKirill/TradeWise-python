@@ -1,13 +1,24 @@
+import json
 import logging
+import os
+import random
 import sys
+from dataclasses import asdict
+from datetime import datetime
+from pathlib import Path
 from typing import Callable
 
 import torch
 import asyncio
 
+from dotenv import load_dotenv
 from torch.utils.data import DataLoader
 from pandas import DataFrame
 
+from app.infrastructure.encoders.DateTimeEncoder import DateTimeEncoder
+from dataAccess.PgModelRepository import PgModelRepository
+from dataAccess.PgConnectionProvider import PgConnectionProvider
+from ml.oneMinute.LSTM.configuration.FullModelInfo import FullModelInfo
 from ml.oneMinute.LSTM.configuration.TrainingConfiguration import TrainingConfiguration
 from ml.oneMinute.LSTM.configuration.LstmConfiguration import LstmConfiguration
 from ml.SequenceDataset import SequenceDataset
@@ -42,7 +53,21 @@ class TrainingPipeline:
             self.setup_dataset,
             self.setup_model,
             self.train_model,
+            self.persist_model
         ]
+
+        load_dotenv()
+        pg_connection_provider = PgConnectionProvider(
+            username=os.getenv('DB_USER', 'postgres'),
+            password=os.getenv('DB_PASSWORD', 'postgres'),
+            host=os.getenv('DB_HOST', 'python-db'),
+            port=int(os.getenv('DB_PORT', 5432)),
+            db=os.getenv('DB_NAME', 'python-db')
+        )
+        self.model_repository = PgModelRepository(
+            connection_provider=pg_connection_provider
+        )
+
         self.train_loader: DataLoader | None = None
         self.test_loader: DataLoader | None = None
         self.training_df: DataFrame | None = None
@@ -150,14 +175,41 @@ class TrainingPipeline:
         train_model_internal(
             model=self.model,
             training_configuration=self.training_configuration,
-            lstm_configuration=self.lstm_configuration,
             train_loader=self.train_loader,
             test_loader=self.test_loader,
             scaler=self.scaler,
             device=self.device,
             logger=logger,
-            model_name="LSTM_ONE_MINUTE",
             optimizer=optimizer,
-            save_best_model=True
         )
 
+    async def persist_model(self) -> None:
+        model_name = "LSTM_ONE_MINUTE"
+        save_dir = Path("../savedModels")
+        save_dir.mkdir(parents=True, exist_ok=True)
+
+        torch.save(self.model.state_dict(), save_dir / f"{model_name}_LAST.pth")
+
+        config = FullModelInfo(
+            id=int(datetime.utcnow().timestamp()),
+            name=model_name,
+            instrument_id=self.training_configuration.instrument_id,
+            model_type="LSTM",
+            created_at=datetime.now(),
+            lstm_configuration=self.lstm_configuration,
+            normalizer_mins=self.scaler.mins.tolist(),
+            normalizer_maxs=self.scaler.maxs.tolist()
+        )
+
+        config_dict = asdict(config)
+        with open(save_dir / f"{model_name}_config.json", "w") as f:
+            json.dump(config_dict, f, indent=4, cls=DateTimeEncoder)
+
+
+        await self.model_repository.add_model(
+            instrument_id=self.training_configuration.instrument_id,
+            name=model_name,
+            model_type="LSTM",
+            model=self.model,
+            configuration=json.dumps(config_dict, indent=4, cls=DateTimeEncoder)
+        )

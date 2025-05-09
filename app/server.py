@@ -24,8 +24,9 @@ from app.services.ModelService import ModelService
 from app.services.UserService import UserService
 from app.services.ClaimValuesService import ClaimValuesService
 from app.infrastructure.GrpcContextAccessor import GrpcContextAccessor
+from dataAccess.LocalModelRepository import LocalModelRepository
 from dataAccess.UserRepository import UserRepository
-from dataAccess.ModelRepository import ModelRepository
+from dataAccess.PgModelRepository import PgModelRepository
 from dataAccess.PgConnectionProvider import PgConnectionProvider
 from externalClients.TInvestApi.handlers.MarketDataClient import MarketDataClient
 from externalClients.TInvestApi.handlers.InstrumentsClient import InstrumentsClient
@@ -83,8 +84,13 @@ class Container(containers.DeclarativeContainer):
     )
 
     model_repository = providers.Factory(
-        ModelRepository,
+        PgModelRepository,
         connection_provider=pg_connection_provider
+    )
+
+    fallback_model_repository = providers.Factory(
+        LocalModelRepository,
+        base_dir="./ml/savedModels"
     )
 
     user_client = providers.Singleton(
@@ -115,7 +121,8 @@ class Container(containers.DeclarativeContainer):
     )
     model_service = providers.Factory(
         ModelService,
-        model_repository=model_repository
+        model_repository=model_repository,
+        fallback_model_repository=fallback_model_repository,
     )
     user_grpc_service = providers.Factory(
         UserGrpcService,
@@ -203,7 +210,6 @@ if __name__ == '__main__':
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
     if 'pydevd' in sys.modules:
-        # Running in PyCharm debug mode
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
@@ -211,5 +217,4 @@ if __name__ == '__main__':
         finally:
             loop.close()
     else:
-        # Normal execution
         asyncio.run(serve())

@@ -1,0 +1,20 @@
+{
+    "id": 1746789633,
+    "instrument_id": "e6123145-9665-43e0-8413-cd61b8aa9b13",
+    "name": "LSTM_ONE_MINUTE",
+    "model_type": "LSTM",
+    "created_at": "2025-05-09T17:20:33.914020",
+    "lstm_configuration": {
+        "input_size": 1,
+        "hidden_layer_size": 32,
+        "num_layers": 1,
+        "output_size": 1,
+        "dropout": 0.0
+    },
+    "normalizer_mins": [
+        270.02
+    ],
+    "normalizer_maxs": [
+        329.77
+    ]
+}
