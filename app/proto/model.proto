@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package model;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/timestamp.proto";
+
+service ModelService {
+  rpc GetAllModels(google.protobuf.Empty) returns (GetAllModelsResponse) {}
+}
+
+message GetAllModelsResponse {
+  repeated ShortModelInfo models = 1;
+}
+
+message ShortModelInfo {
+  int64 id = 1;
+  string instrument_id = 2;
+  string name = 3;
+  string type = 4;
+  google.protobuf.Timestamp created_at = 5;
+}

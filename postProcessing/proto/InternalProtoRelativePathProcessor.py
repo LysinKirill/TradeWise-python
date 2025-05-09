@@ -7,7 +7,8 @@ class InternalProtoRelativePathProcessor(ProtoProcessorBase):
             self,
             import_statements_to_replace=[
                 "import user_pb2",
-                "import invest_pb2"
+                "import invest_pb2",
+                "import model_pb2"
             ],
             files_dir="app/proto",
             new_prefix="from app.proto"
