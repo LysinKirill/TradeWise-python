@@ -1,0 +1,29 @@
+{
+  "TrainingConfiguration": {
+    "instrument_id": "e6123145-9665-43e0-8413-cd61b8aa9b13",
+    "sequence_length": 16,
+    "train_period_start": "2025-01-01T00:00:00",
+    "train_period_end": "2025-04-30T00:00:00",
+    "batch_size": 32,
+    "epochs": 20,
+    "learning_rate": 0.01
+  },
+  "FullModelInfo": {
+    "id": null,
+    "instrument_id": "e6123145-9665-43e0-8413-cd61b8aa9b13",
+    "name": "SBER_one_minute_16_lookback",
+    "model_type": "LSTM",
+    "created_at": "2025-05-09T14:30:00.000000",
+    "model_configuration": {
+      "input_size": 1,
+      "hidden_layer_size": 32,
+      "num_layers": 1,
+      "output_size": 1,
+      "dropout": 0
+    },
+    "normalizer_mins": [],
+    "normalizer_maxs": []
+  }
+}
+
+

@@ -1,14 +1,18 @@
 import torch.nn as nn
 
+from ml.configuration.FullModelInfo import FullModelInfo
 from ml.oneMinute.LSTM.configuration.LstmConfiguration import LstmConfiguration
 
 
 class StockPriceLstm(nn.Module):
     def __init__(
             self,
-            configuration: LstmConfiguration,
+            model_info: FullModelInfo,
     ):
         super().__init__()
+        configuration = model_info.model_configuration
+        configuration: LstmConfiguration
+
         self.lstm = nn.LSTM(
             input_size=configuration.input_size,
             hidden_size=configuration.hidden_layer_size,

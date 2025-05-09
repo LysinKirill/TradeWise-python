@@ -33,7 +33,6 @@ async def main():
         input_size=1,
         hidden_layer_size=32,
         num_layers=1,
-        criterion=torch.nn.MSELoss(),
         output_size=1
     )
 

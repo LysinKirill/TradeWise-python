@@ -8,14 +8,24 @@ from dataAccess.models.model.ShortModelInfo import ShortModelInfo
 class ModelService(IModelService):
     def __init__(
         self,
-        model_repository: IModelRepository
+        model_repository: IModelRepository,
+        fallback_model_repository: IModelRepository,
     ):
         self.model_repository = model_repository
+        self.fallback_model_repository = fallback_model_repository
 
 
     async def get_all_models_info(self) -> GetAllModelsInfoResponseModel:
         repository_response = await self.model_repository.get_all_models_info()
-        return GetAllModelsInfoResponseModel(models=list(map(ModelService._get_domain_model, repository_response.models)))
+        model_names_pg = {x.name for x in repository_response.models}
+        models = repository_response.models
+
+        fallback_model_repository_response = await self.fallback_model_repository.get_all_models_info()
+        for fallback_model in fallback_model_repository_response.models:
+            if fallback_model.name not in model_names_pg:
+                models.append(fallback_model)
+
+        return GetAllModelsInfoResponseModel(models=list(map(ModelService._get_domain_model, models)))
 
 
     @staticmethod
