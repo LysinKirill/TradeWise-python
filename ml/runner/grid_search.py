@@ -82,7 +82,6 @@ async def run_single_test(invest_api_key, SBER_INSTRUMENT_ID, config,
 async def perform_grid_search():
     load_dotenv()
     invest_api_key = os.environ.get("INVEST_TOKEN")
-    account_id = os.environ.get("ACCOUNT_ID")
     SBER_INSTRUMENT_ID = "e6123145-9665-43e0-8413-cd61b8aa9b13"
 
     config = LstmConfiguration(
