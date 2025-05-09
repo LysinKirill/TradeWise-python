@@ -10,18 +10,22 @@ import sys
 
 from app.configuration import Settings, SupportedInstrumentsOptions
 from app.grpcServices.InvestGrpcService import InvestGrpcService
+from app.grpcServices.ModelGrpcService import ModelGrpcService
 from app.interceptors.ContextInterceptor import ContextInterceptor
 from app.proto import (
     user_pb2_grpc,
-    invest_pb2_grpc
+    invest_pb2_grpc,
+    model_pb2_grpc,
 )
 
 from app.grpcServices.UserGrpcService import UserGrpcService
 from app.services.InvestService import InvestService
+from app.services.ModelService import ModelService
 from app.services.UserService import UserService
 from app.services.ClaimValuesService import ClaimValuesService
 from app.infrastructure.GrpcContextAccessor import GrpcContextAccessor
 from dataAccess.UserRepository import UserRepository
+from dataAccess.ModelRepository import ModelRepository
 from dataAccess.PgConnectionProvider import PgConnectionProvider
 from externalClients.TInvestApi.handlers.MarketDataClient import MarketDataClient
 from externalClients.TInvestApi.handlers.InstrumentsClient import InstrumentsClient
@@ -78,6 +82,11 @@ class Container(containers.DeclarativeContainer):
         connection_provider=pg_connection_provider
     )
 
+    model_repository = providers.Factory(
+        ModelRepository,
+        connection_provider=pg_connection_provider
+    )
+
     user_client = providers.Singleton(
         UserClient,
         endpoint=t_api_endpoint,
@@ -104,6 +113,10 @@ class Container(containers.DeclarativeContainer):
         marketdata_client=marketdata_client,
         supported_instruments_options=supported_instruments_options,
     )
+    model_service = providers.Factory(
+        ModelService,
+        model_repository=model_repository
+    )
     user_grpc_service = providers.Factory(
         UserGrpcService,
         user_service=user_service,
@@ -112,6 +125,11 @@ class Container(containers.DeclarativeContainer):
     invest_grpc_service = providers.Factory(
         InvestGrpcService,
         invest_service=invest_service,
+        claim_values_service=claim_values_service
+    )
+    model_grpc_service = providers.Factory(
+        ModelGrpcService,
+        model_service=model_service,
         claim_values_service=claim_values_service
     )
 
@@ -172,11 +190,26 @@ async def serve():
 def register_grpc_services(container: Container, server: grpc.Server):
     user_grpc_service = container.user_grpc_service()
     user_pb2_grpc.add_UserServiceServicer_to_server(user_grpc_service, server)
+
     invest_grpc_service = container.invest_grpc_service()
     invest_pb2_grpc.add_InvestServiceServicer_to_server(invest_grpc_service, server)
+
+    model_grpc_service = container.model_grpc_service()
+    model_pb2_grpc.add_ModelServiceServicer_to_server(model_grpc_service, server)
 
 
 if __name__ == '__main__':
     if os.name == 'nt':
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    asyncio.run(serve())
+
+    if 'pydevd' in sys.modules:
+        # Running in PyCharm debug mode
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(serve())
+        finally:
+            loop.close()
+    else:
+        # Normal execution
+        asyncio.run(serve())
