@@ -2,7 +2,8 @@ from functools import wraps
 import grpc
 import sys
 import logging
-
+from app.domain.exceptions.user.MissingValueException import MissingValueException
+from app.domain.exceptions.user.NoAccountsExistException import NoAccountsExistException
 
 logging.basicConfig(
     level=logging.INFO,
@@ -12,15 +13,28 @@ logging.basicConfig(
 
 logger = logging.getLogger("[ExceptionLogger]")
 
-def exception_logging(func):
+def exception_handler(func):
     @wraps(func)
     async def wrapper(self, request, context):
         try:
             return await func(self, request, context)
+        except (NoAccountsExistException, MissingValueException) as e:
+            logger.warning(f"Business exception in {func.__name__}: {str(e)}")
+            await context.abort(grpc.StatusCode.NOT_FOUND, str(e))
+        except grpc.RpcError as e:
+            logger.error(
+                f"RPC Error in {func.__name__}: "
+                f"Code={e.code()}, Details={e.details()}",
+                exc_info=True
+            )
+            raise
         except Exception as e:
-            if context.code() != grpc.StatusCode.OK:
-                logger.error(f"RPC Exception: Status code: {context.code()}, Details: {context.details()}")
-                raise
-            logger.error(f"Exception in {func.__name__}: {e}")
-            await context.abort(grpc.StatusCode.INTERNAL, f"Internal error occurred: {str(e)}")
+            logger.error(
+                f"Unexpected error in {func.__name__}",
+                exc_info=True
+            )
+            await context.abort(
+                grpc.StatusCode.INTERNAL,
+                f"Internal server error: {str(e)}"
+            )
     return wrapper
