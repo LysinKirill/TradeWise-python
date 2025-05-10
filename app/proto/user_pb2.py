@@ -25,23 +25,27 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nuser.proto\x12\x04user\x1a\x1bgoogle/protobuf/empty.proto\"A\n\x12GetAccountsRequest\x12+\n\x0e\x61\x63\x63ount_status\x18\x01 \x01(\x0e\x32\x13.user.AccountStatus\":\n\x13GetAccountsResponse\x12#\n\x08\x61\x63\x63ounts\x18\x01 \x03(\x0b\x32\x11.user.AccountInfo\")\n\x16\x41\x64\x64InvestApiKeyRequest\x12\x0f\n\x07\x61pi_key\x18\x01 \x01(\t\"\'\n\x0b\x41\x63\x63ountInfo\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t*\x93\x01\n\rAccountStatus\x12\x1e\n\x1a\x41\x43\x43OUNT_STATUS_UNSPECIFIED\x10\x00\x12\x16\n\x12\x41\x43\x43OUNT_STATUS_NEW\x10\x01\x12\x17\n\x13\x41\x43\x43OUNT_STATUS_OPEN\x10\x02\x12\x19\n\x15\x41\x43\x43OUNT_STATUS_CLOSED\x10\x03\x12\x16\n\x12\x41\x43\x43OUNT_STATUS_ALL\x10\x04\x32\x9a\x01\n\x0bUserService\x12\x42\n\x0bGetAccounts\x12\x18.user.GetAccountsRequest\x1a\x19.user.GetAccountsResponse\x12G\n\x0f\x41\x64\x64InvestApiKey\x12\x1c.user.AddInvestApiKeyRequest\x1a\x16.google.protobuf.Emptyb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nuser.proto\x12\x04user\x1a\x1bgoogle/protobuf/empty.proto\"P\n\x14GetPortfolioResponse\x12\x15\n\rruble_balance\x18\x01 \x01(\x01\x12!\n\tpositions\x18\x02 \x03(\x0b\x32\x0e.user.Position\"o\n\x08Position\x12\x15\n\rinstrument_id\x18\x01 \x01(\t\x12\x10\n\x08quantity\x18\x02 \x01(\x05\x12\x0e\n\x06ticker\x18\x03 \x01(\t\x12\x13\n\x0b\x64\x61ily_yield\x18\x04 \x01(\x02\x12\x15\n\rcurrent_price\x18\x05 \x01(\x02\"A\n\x12GetAccountsRequest\x12+\n\x0e\x61\x63\x63ount_status\x18\x01 \x01(\x0e\x32\x13.user.AccountStatus\":\n\x13GetAccountsResponse\x12#\n\x08\x61\x63\x63ounts\x18\x01 \x03(\x0b\x32\x11.user.AccountInfo\")\n\x16\x41\x64\x64InvestApiKeyRequest\x12\x0f\n\x07\x61pi_key\x18\x01 \x01(\t\"\'\n\x0b\x41\x63\x63ountInfo\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t*\x93\x01\n\rAccountStatus\x12\x1e\n\x1a\x41\x43\x43OUNT_STATUS_UNSPECIFIED\x10\x00\x12\x16\n\x12\x41\x43\x43OUNT_STATUS_NEW\x10\x01\x12\x17\n\x13\x41\x43\x43OUNT_STATUS_OPEN\x10\x02\x12\x19\n\x15\x41\x43\x43OUNT_STATUS_CLOSED\x10\x03\x12\x16\n\x12\x41\x43\x43OUNT_STATUS_ALL\x10\x04\x32\xde\x01\n\x0bUserService\x12\x42\n\x0bGetAccounts\x12\x18.user.GetAccountsRequest\x1a\x19.user.GetAccountsResponse\x12G\n\x0f\x41\x64\x64InvestApiKey\x12\x1c.user.AddInvestApiKeyRequest\x1a\x16.google.protobuf.Empty\x12\x42\n\x0cGetPortfolio\x12\x16.google.protobuf.Empty\x1a\x1a.user.GetPortfolioResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'user_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_ACCOUNTSTATUS']._serialized_start=261
-  _globals['_ACCOUNTSTATUS']._serialized_end=408
-  _globals['_GETACCOUNTSREQUEST']._serialized_start=49
-  _globals['_GETACCOUNTSREQUEST']._serialized_end=114
-  _globals['_GETACCOUNTSRESPONSE']._serialized_start=116
-  _globals['_GETACCOUNTSRESPONSE']._serialized_end=174
-  _globals['_ADDINVESTAPIKEYREQUEST']._serialized_start=176
-  _globals['_ADDINVESTAPIKEYREQUEST']._serialized_end=217
-  _globals['_ACCOUNTINFO']._serialized_start=219
-  _globals['_ACCOUNTINFO']._serialized_end=258
-  _globals['_USERSERVICE']._serialized_start=411
-  _globals['_USERSERVICE']._serialized_end=565
+  _globals['_ACCOUNTSTATUS']._serialized_start=456
+  _globals['_ACCOUNTSTATUS']._serialized_end=603
+  _globals['_GETPORTFOLIORESPONSE']._serialized_start=49
+  _globals['_GETPORTFOLIORESPONSE']._serialized_end=129
+  _globals['_POSITION']._serialized_start=131
+  _globals['_POSITION']._serialized_end=242
+  _globals['_GETACCOUNTSREQUEST']._serialized_start=244
+  _globals['_GETACCOUNTSREQUEST']._serialized_end=309
+  _globals['_GETACCOUNTSRESPONSE']._serialized_start=311
+  _globals['_GETACCOUNTSRESPONSE']._serialized_end=369
+  _globals['_ADDINVESTAPIKEYREQUEST']._serialized_start=371
+  _globals['_ADDINVESTAPIKEYREQUEST']._serialized_end=412
+  _globals['_ACCOUNTINFO']._serialized_start=414
+  _globals['_ACCOUNTINFO']._serialized_end=453
+  _globals['_USERSERVICE']._serialized_start=606
+  _globals['_USERSERVICE']._serialized_end=828
 # @@protoc_insertion_point(module_scope)

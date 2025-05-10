@@ -1,6 +1,6 @@
 import grpc
 
-from app.debug.ExceptionLogger import exception_logging
+from app.debug.ExceptionLogger import exception_handler
 from app.domain.models.invest import InstrumentModel
 from app.domain.models.invest.InstrumentStatType import InstrumentStatType
 from app.domain.models.invest.requests.GetCandlesRequestModel import GetCandlesRequestModel
@@ -20,7 +20,7 @@ class InvestGrpcService(invest_pb2_grpc.InvestServiceServicer):
         self.invest_service = invest_service
         self.claim_values_service = claim_values_service
 
-    @exception_logging
+    @exception_handler
     @request_response_logging()
     @jwt_authorization
     async def GetSupportedInstruments(self, request, context):
@@ -28,7 +28,7 @@ class InvestGrpcService(invest_pb2_grpc.InvestServiceServicer):
         return invest_pb2.GetSupportedInstrumentsResponse(instruments=
         [InvestGrpcService.__get_instrument_from_model(instrument) for instrument in response.instruments])
 
-    @exception_logging
+    @exception_handler
     @request_response_logging()
     @jwt_authorization
     async def GetCandles(self, request, context):
@@ -47,7 +47,7 @@ class InvestGrpcService(invest_pb2_grpc.InvestServiceServicer):
             close=candle.close
         ) for candle in response.candles])
 
-    @exception_logging
+    @exception_handler
     @request_response_logging()
     @jwt_authorization
     async def GetInstrumentStat(self, request, context):

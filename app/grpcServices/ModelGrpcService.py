@@ -1,4 +1,4 @@
-from app.debug.ExceptionLogger import exception_logging
+from app.debug.ExceptionLogger import exception_handler
 from app.domain.models.ml_model.ShortModelInfoModel import ShortModelInfoModel
 from app.domain.services.IClaimValuesService import IClaimValuesService
 from app.domain.services.IModelService import IModelService
@@ -16,7 +16,7 @@ class ModelGrpcService(model_pb2_grpc.ModelServiceServicer):
         self.model_service = model_service
         self.claim_values_service = claim_values_service
 
-    @exception_logging
+    @exception_handler
     @request_response_logging()
     @jwt_authorization
     async def GetAllModels(self, request, context):

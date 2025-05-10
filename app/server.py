@@ -30,6 +30,7 @@ from dataAccess.PgModelRepository import PgModelRepository
 from dataAccess.PgConnectionProvider import PgConnectionProvider
 from externalClients.TInvestApi.handlers.MarketDataClient import MarketDataClient
 from externalClients.TInvestApi.handlers.InstrumentsClient import InstrumentsClient
+from externalClients.TInvestApi.handlers.OperationsClient import OperationClient
 from externalClients.TInvestApi.handlers.UserClient import UserClient
 
 logging.basicConfig(
@@ -108,9 +109,15 @@ class Container(containers.DeclarativeContainer):
         endpoint=t_api_endpoint,
         api_key=t_api_token
     )
+    operations_client = providers.Singleton(
+        OperationClient,
+        endpoint=t_api_endpoint,
+        api_key=t_api_token
+    )
     user_service = providers.Factory(
         UserService,
         user_client=user_client,
+        operations_client=operations_client,
         user_repository=user_repository
     )
     invest_service = providers.Factory(
