@@ -1,6 +1,10 @@
+from app.domain.exceptions.user.MissingValueException import MissingValueException
+from app.domain.exceptions.user.NoAccountsExistException import NoAccountsExistException
 from app.domain.models.user.responses.GetAccountsResponseModel import GetAccountsResponseModel
+from app.domain.models.user.responses.GetPortfolioResponseModel import GetPortfolioResponseModel
 from app.domain.services.IUserService import IUserService
 from dataAccess.interfaces.IUserRepository import IUserRepository
+from externalClients.TInvestApi.handlers import OperationsClient
 
 from externalClients.TInvestApi.handlers.UserClient import UserClient
 
@@ -20,9 +24,11 @@ class UserService(IUserService):
     def __init__(
             self,
             user_client: UserClient,
+            operations_client: OperationsClient,
             user_repository: IUserRepository
     ):
         self.user_client = user_client
+        self.operations_client = operations_client
         self.user_repository = user_repository
 
     async def get_accounts(self, request: GetAccountsRequestModel.GetAccountsRequestModel) -> GetAccountsResponseModel:
@@ -33,6 +39,24 @@ class UserService(IUserService):
 
     async def add_invest_api_key(self, request: AddInvestApiKeyRequestModel.AddInvestApiKeyRequestModel) -> bool:
         return await self.user_repository.add_invest_api_key(email=request.email, api_key=request.api_key)
+
+
+    async def get_portfolio(self) -> GetPortfolioResponseModel:
+        accounts = (await self.get_accounts(request=GetAccountsRequestModel.GetAccountsRequestModel(
+            status=AccountStatusModel.AccountStatusModel.ACCOUNT_STATUS_OPEN
+        ))).accounts
+
+        if not accounts:
+            raise NoAccountsExistException("No invest accounts for user found.")
+
+        accounts = list(sorted(accounts, key=lambda account: account.opened_date))
+        first_account = accounts[0]
+        operations_client_response = await self.operations_client.get_portfolio(first_account.id)
+        if not operations_client_response:
+            raise MissingValueException("Client returned portfolio with some required fields missing.")
+
+        return operations_client_response
+
 
     @staticmethod
     def __get_account(client_account) -> AccountInfoModel.AccountInfoModel:

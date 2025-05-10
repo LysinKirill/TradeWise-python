@@ -1,4 +1,5 @@
 from grpc import aio, ssl_channel_credentials
+from externalClients.TInvestApi.proto import (common_pb2)
 
 
 class BaseClient:
@@ -11,3 +12,18 @@ class BaseClient:
 
     async def close(self):
         await self.channel.close()
+
+
+
+    NANO_CONVERSION_FACTOR: float = 1e-9
+    @staticmethod
+    def _quotation_to_float(quotation: common_pb2.Quotation | None) -> float | None:
+        if quotation is None:
+            return None
+        return quotation.units + quotation.nano * BaseClient.NANO_CONVERSION_FACTOR
+
+    @staticmethod
+    def _money_to_float(money: common_pb2.MoneyValue | None) -> float | None:
+        if money is None:
+            return None
+        return money.units + money.nano * BaseClient.NANO_CONVERSION_FACTOR

@@ -7,8 +7,21 @@ import "google/protobuf/empty.proto";
 service UserService {
   rpc GetAccounts (GetAccountsRequest) returns (GetAccountsResponse);
   rpc AddInvestApiKey(AddInvestApiKeyRequest) returns (google.protobuf.Empty);
+  rpc GetPortfolio(google.protobuf.Empty) returns (GetPortfolioResponse);
 }
 
+message GetPortfolioResponse {
+  double ruble_balance = 1;
+  repeated Position positions = 2;
+}
+
+message Position {
+  string instrument_id = 1;
+  int32 quantity = 2;
+  string ticker = 3;
+  float daily_yield = 4;
+  float current_price = 5;
+}
 
 message GetAccountsRequest {
   AccountStatus account_status = 1;

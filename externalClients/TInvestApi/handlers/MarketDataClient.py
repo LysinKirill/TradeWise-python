@@ -26,10 +26,10 @@ class MarketDataClient(BaseClient):
 
         response = await self.stub.GetCandles(invest_api_request, metadata=self.get_metadata())
         return [(
-            MarketDataClient.__quotation_to_float(candle.open),
-            MarketDataClient.__quotation_to_float(candle.high),
-            MarketDataClient.__quotation_to_float(candle.low),
-            MarketDataClient.__quotation_to_float(candle.close),
+            BaseClient._quotation_to_float(candle.open),
+            BaseClient._quotation_to_float(candle.high),
+            BaseClient._quotation_to_float(candle.low),
+            BaseClient._quotation_to_float(candle.close),
             candle.time.ToDatetime()) for candle in response.candles]
 
     async def get_instrument_stat(self, request: GetInstrumentStatRequestModel.GetInstrumentStatRequestModel) -> float | None:
@@ -64,13 +64,13 @@ class MarketDataClient(BaseClient):
         last_observation = technical_indicators[-1]
 
         match request.stat_type:
-            case InstrumentStatType.BollingerBandLower: return MarketDataClient.__quotation_to_float(last_observation.lower_band)
-            case InstrumentStatType.BollingerBandMiddle: return MarketDataClient.__quotation_to_float(last_observation.middle_band)
-            case InstrumentStatType.BollingerBandUpper: return MarketDataClient.__quotation_to_float(last_observation.upper_band)
-            case InstrumentStatType.ExponentialMovingAverage: return MarketDataClient.__quotation_to_float(last_observation.signal)
-            case InstrumentStatType.RelativeStrengthIndex: return MarketDataClient.__quotation_to_float(last_observation.signal)
-            case InstrumentStatType.MovingAverageConvergenceDivergence: return MarketDataClient.__quotation_to_float(last_observation.macd)
-            case InstrumentStatType.MovingAverage: return MarketDataClient.__quotation_to_float(last_observation.signal)
+            case InstrumentStatType.BollingerBandLower: return BaseClient._quotation_to_float(last_observation.lower_band)
+            case InstrumentStatType.BollingerBandMiddle: return BaseClient._quotation_to_float(last_observation.middle_band)
+            case InstrumentStatType.BollingerBandUpper: return BaseClient._quotation_to_float(last_observation.upper_band)
+            case InstrumentStatType.ExponentialMovingAverage: return BaseClient._quotation_to_float(last_observation.signal)
+            case InstrumentStatType.RelativeStrengthIndex: return BaseClient._quotation_to_float(last_observation.signal)
+            case InstrumentStatType.MovingAverageConvergenceDivergence: return BaseClient._quotation_to_float(last_observation.macd)
+            case InstrumentStatType.MovingAverage: return BaseClient._quotation_to_float(last_observation.signal)
             case _: return None
 
 
@@ -89,15 +89,6 @@ class MarketDataClient(BaseClient):
         return MarketDataClient\
             .__domain_to_client_stat_type_mapping\
             .get(python_enum_value, marketdata_pb2.GetTechAnalysisRequest.IndicatorType.INDICATOR_TYPE_UNSPECIFIED)
-
-
-    NANO_CONVERSION_FACTOR: float = 1e-9
-    @staticmethod
-    def __quotation_to_float(quotation: common_pb2.Quotation | None) -> float | None:
-        if quotation is None:
-            return None
-        return quotation.units + quotation.nano * MarketDataClient.NANO_CONVERSION_FACTOR
-
 
     __default_deviation = marketdata_pb2.GetTechAnalysisRequest.Deviation(
         deviation_multiplier=common_pb2.Quotation(

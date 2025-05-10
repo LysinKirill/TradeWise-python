@@ -1,4 +1,4 @@
-from app.debug.ExceptionLogger import exception_logging
+from app.debug.ExceptionLogger import exception_handler
 from app.domain.models.user.requests.AddInvestApiKeyRequestModel import AddInvestApiKeyRequestModel
 from app.domain.models.user.requests.GetAccountsRequestModel import GetAccountsRequestModel
 from app.domain.models.user.AccountStatusModel import AccountStatusModel
@@ -20,7 +20,7 @@ class UserGrpcService(user_pb2_grpc.UserServiceServicer):
         self.claim_values_service = claim_values_service
 
 
-    @exception_logging
+    @exception_handler
     @request_response_logging()
     @jwt_authorization
     async def GetAccounts(self, request, context):
@@ -31,7 +31,7 @@ class UserGrpcService(user_pb2_grpc.UserServiceServicer):
         return user_pb2.GetAccountsResponse(accounts=
         [user_pb2.AccountInfo(id=account.id, name=account.name) for account in response.accounts])
 
-    @exception_logging
+    @exception_handler
     @request_response_logging()
     @jwt_authorization
     async def AddInvestApiKey(self, request, context):
@@ -39,6 +39,24 @@ class UserGrpcService(user_pb2_grpc.UserServiceServicer):
         request_model = AddInvestApiKeyRequestModel(api_key=request.api_key, email=email)
         await self.user_service.add_invest_api_key(request_model)
         return empty_pb2.Empty()
+
+    @exception_handler
+    @request_response_logging()
+    @jwt_authorization
+    async def GetPortfolio(self, request, context):
+        portfolio = await self.user_service.get_portfolio()
+        return user_pb2.GetPortfolioResponse(
+            ruble_balance=portfolio.ruble_balance,
+            positions=[
+                user_pb2.Position(
+                    instrument_id=position.instrument_id,
+                    quantity=position.quantity,
+                    current_price=position.current_price,
+                    ticker=position.ticker,
+                    daily_yield=position.daily_yield
+                ) for position in portfolio.positions
+            ]
+        )
 
     @staticmethod
     def __get_account_status(status) -> AccountStatusModel:
