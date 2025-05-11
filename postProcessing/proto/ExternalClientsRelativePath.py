@@ -9,7 +9,8 @@ class ExternalClientsRelativePathProcessor(ProtoProcessorBase):
                 "import common_pb2",
                 "import users_pb2",
                 "import instruments_pb2",
-                "import marketdata_pb2"
+                "import marketdata_pb2",
+                "import operations_pb2"
             ],
             files_dir="externalClients/TInvestApi/proto",
             new_prefix="from externalClients.TInvestApi.proto"
