@@ -7,6 +7,40 @@ import "google/protobuf/timestamp.proto";
 
 service ModelService {
   rpc GetAllModels(google.protobuf.Empty) returns (GetAllModelsResponse) {}
+  rpc StartExecution(StartExecutionRequest) returns (StartExecutionResponse) {}
+  rpc StopExecution(StopExecutionRequest) returns (google.protobuf.Empty) {}
+  rpc GetExecutionStatus(GetExecutionStatusRequest) returns (GetExecutionStatusResponse) {}
+}
+
+
+message StopExecutionRequest {
+  int64 execution_id = 1;
+}
+
+message GetExecutionStatusRequest {
+  int64 execution_id = 1;
+}
+
+enum ExecutionStatus {
+  ExecutionStatus_Unknown = 0;
+  ExecutionStatus_Pending = 1;
+  ExecutionStatus_Running = 2;
+  ExecutionStatus_Failed = 3;
+  ExecutionStatus_Completed = 4;
+}
+
+message GetExecutionStatusResponse {
+  ExecutionStatus status = 1;
+}
+
+message StartExecutionRequest {
+  int64 model_id = 1;
+  double initial_balance = 2;
+  int32 max_execution_duration_seconds = 3;
+}
+
+message StartExecutionResponse {
+  int64 execution_id = 1;
 }
 
 message GetAllModelsResponse {
