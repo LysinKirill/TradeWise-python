@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-import operations_pb2 as operations__pb2
+from externalClients.TInvestApi.proto import operations_pb2 as operations__pb2
 
 GRPC_GENERATED_VERSION = '1.69.0'
 GRPC_VERSION = grpc.__version__

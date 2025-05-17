@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package backtest;
+
+import "google/protobuf/timestamp.proto";
+
+service BacktestService {
+  rpc StartBacktest(StartBacktestRequest) returns (StartBacktestResponse) {}
+  rpc GetBacktestStatus(GetBacktestStatusRequest) returns (GetBacktestStatusResponse) {}
+}
+
+enum ExecutionFinishedBehaviour {
+  ExecutionFinishedBehaviour_Unknown = 0;
+  ExecutionFinishedBehaviour_Sell = 1;
+  ExecutionFinishedBehaviour_Hold = 2;
+}
+
+message StartBacktestRequest {
+  int64 model_id = 1;
+  google.protobuf.Timestamp from_ = 2;
+  google.protobuf.Timestamp to = 3;
+  double initial_balance = 4;
+  ExecutionFinishedBehaviour execution_finished_behaviour = 5;
+}
+
+message StartBacktestResponse {
+  int64 backtest_id = 1;
+}
+
+enum BacktestStatus {
+  BacktestStatus_Unknown = 0;
+  BacktestStatus_Running = 1;
+}
+
+message GetBacktestStatusResponse {
+  BacktestStatus status = 1;
+}
+
+message GetBacktestStatusRequest {
+  int64 backtest_id = 1;
+}
+
