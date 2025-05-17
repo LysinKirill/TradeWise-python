@@ -40,12 +40,45 @@ class ModelServiceStub(object):
                 request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
                 response_deserializer=model__pb2.GetAllModelsResponse.FromString,
                 _registered_method=True)
+        self.StartExecution = channel.unary_unary(
+                '/model.ModelService/StartExecution',
+                request_serializer=model__pb2.StartExecutionRequest.SerializeToString,
+                response_deserializer=model__pb2.StartExecutionResponse.FromString,
+                _registered_method=True)
+        self.StopExecution = channel.unary_unary(
+                '/model.ModelService/StopExecution',
+                request_serializer=model__pb2.StopExecutionRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+        self.GetExecutionStatus = channel.unary_unary(
+                '/model.ModelService/GetExecutionStatus',
+                request_serializer=model__pb2.GetExecutionStatusRequest.SerializeToString,
+                response_deserializer=model__pb2.GetExecutionStatusResponse.FromString,
+                _registered_method=True)
 
 
 class ModelServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def GetAllModels(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def StartExecution(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def StopExecution(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetExecutionStatus(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -58,6 +91,21 @@ def add_ModelServiceServicer_to_server(servicer, server):
                     servicer.GetAllModels,
                     request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                     response_serializer=model__pb2.GetAllModelsResponse.SerializeToString,
+            ),
+            'StartExecution': grpc.unary_unary_rpc_method_handler(
+                    servicer.StartExecution,
+                    request_deserializer=model__pb2.StartExecutionRequest.FromString,
+                    response_serializer=model__pb2.StartExecutionResponse.SerializeToString,
+            ),
+            'StopExecution': grpc.unary_unary_rpc_method_handler(
+                    servicer.StopExecution,
+                    request_deserializer=model__pb2.StopExecutionRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'GetExecutionStatus': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetExecutionStatus,
+                    request_deserializer=model__pb2.GetExecutionStatusRequest.FromString,
+                    response_serializer=model__pb2.GetExecutionStatusResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -87,6 +135,87 @@ class ModelService(object):
             '/model.ModelService/GetAllModels',
             google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             model__pb2.GetAllModelsResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def StartExecution(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/model.ModelService/StartExecution',
+            model__pb2.StartExecutionRequest.SerializeToString,
+            model__pb2.StartExecutionResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def StopExecution(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/model.ModelService/StopExecution',
+            model__pb2.StopExecutionRequest.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetExecutionStatus(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/model.ModelService/GetExecutionStatus',
+            model__pb2.GetExecutionStatusRequest.SerializeToString,
+            model__pb2.GetExecutionStatusResponse.FromString,
             options,
             channel_credentials,
             insecure,

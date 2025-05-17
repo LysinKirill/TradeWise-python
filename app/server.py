@@ -11,11 +11,13 @@ import sys
 from app.configuration import Settings, SupportedInstrumentsOptions
 from app.grpcServices.InvestGrpcService import InvestGrpcService
 from app.grpcServices.ModelGrpcService import ModelGrpcService
+from app.grpcServices.BacktestGrpcService import BacktestGrpcService
 from app.interceptors.ContextInterceptor import ContextInterceptor
 from app.proto import (
     user_pb2_grpc,
     invest_pb2_grpc,
     model_pb2_grpc,
+    backtest_pb2_grpc
 )
 
 from app.grpcServices.UserGrpcService import UserGrpcService
@@ -146,6 +148,9 @@ class Container(containers.DeclarativeContainer):
         model_service=model_service,
         claim_values_service=claim_values_service
     )
+    backtest_grpc_service = providers.Factory(
+        BacktestGrpcService
+    )
 
 
 async def serve():
@@ -210,6 +215,9 @@ def register_grpc_services(container: Container, server: grpc.Server):
 
     model_grpc_service = container.model_grpc_service()
     model_pb2_grpc.add_ModelServiceServicer_to_server(model_grpc_service, server)
+
+    backtest_grpc_service = container.backtest_grpc_service()
+    backtest_pb2_grpc.add_BacktestServiceServicer_to_server(backtest_grpc_service, server)
 
 
 if __name__ == '__main__':
