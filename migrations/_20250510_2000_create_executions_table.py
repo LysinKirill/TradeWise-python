@@ -1,6 +1,6 @@
 from pydapper.commands import CommandsAsync
-
 from migrations.infrastructure.MigrationAttribute import *
+
 
 @migration(version=3, description="Create model executions table with financial tracking")
 class _20250510_2000_create_executions_table(ForwardMigration):
