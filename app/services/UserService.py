@@ -38,7 +38,21 @@ class UserService(IUserService):
         )
 
     async def add_invest_api_key(self, request: AddInvestApiKeyRequestModel.AddInvestApiKeyRequestModel) -> bool:
-        return await self.user_repository.add_invest_api_key(email=request.email, api_key=request.api_key)
+        accounts = (await self.get_accounts(request=GetAccountsRequestModel.GetAccountsRequestModel(
+            status=AccountStatusModel.AccountStatusModel.ACCOUNT_STATUS_OPEN
+        ))).accounts
+
+        if not accounts:
+            raise NoAccountsExistException("No invest accounts for user found.")
+
+        accounts = list(sorted(accounts, key=lambda account: account.opened_date))
+        first_account = accounts[0]
+
+        return await self.user_repository.add_invest_api_key(
+            email=request.email,
+            api_key=request.api_key,
+            invest_account_id=first_account.id,
+        )
 
 
     async def get_portfolio(self) -> GetPortfolioResponseModel:
