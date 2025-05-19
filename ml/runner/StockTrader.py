@@ -100,10 +100,6 @@ class StockTrader:
                 self.logger.info(f"Not enough price history [{len(self.candle_history)}]. Skipping trading cycle")
                 return
 
-            # features = np.array([
-            #     [candle.open, candle.high, candle.low, candle.close, candle.volume]
-            #     for candle in self.candle_history
-            # ])
             features = np.array([
                 [candle.close]
                 for candle in self.candle_history

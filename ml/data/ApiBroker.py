@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from ml.data.interface.IBroker import IBroker
 from ml.data.model.OperationType import OperationType
 from ml.data.model.responses.GetPortfolioResponse import GetPortfolioResponse
@@ -20,46 +22,47 @@ logging.basicConfig(
     stream=sys.stdout
 )
 
+@dataclass
+class InstrumentInfo:
+    instrument_id: str
+    lot_size: int
+
 
 class ApiBroker(IBroker):
-    def __init__(
-            self,
-            invest_api_key: str,
-            account_id: str,
-            instrument_id: str
-        ):
+    def __init__(self):
         self.logger = logging.getLogger("[ApiBroker]")
-        self.figi: str | None = None
-        self.lot_size: int | None = None
-        self.instrument_id = instrument_id
-        self.account_id = account_id
-        self.invest_api_key = invest_api_key
         channel = aio.secure_channel("invest-public-api.tinkoff.ru:443", ssl_channel_credentials())
         self.orders_stub = orders_pb2_grpc.OrdersServiceStub(channel)
         self.operations_stub = operations_pb2_grpc.OperationsServiceStub(channel)
         self.instruments_stub = instruments_pb2_grpc.InstrumentsServiceStub(channel)
 
+        self.instrument_map: dict[str, InstrumentInfo] = {}
 
-    async def load_instrument(self):
+
+
+    async def load_instrument(self, instrument_id: str, invest_api_key: str):
         instrument_request = instruments_pb2.InstrumentRequest(
             id_type=instruments_pb2.InstrumentIdType.INSTRUMENT_ID_TYPE_UID,
-            id=self.instrument_id,
+            id=instrument_id,
         )
         instrument = (await
             self.instruments_stub.ShareBy(
                 instrument_request,
-                metadata=self._get_metadata()
+                metadata=self._get_metadata(invest_api_key)
             )
         ).instrument
 
-        self.figi = instrument.figi
-        self.lot_size = instrument.lot
+        self.instrument_map[instrument_id] = InstrumentInfo(instrument.instrument_uid, instrument.lot_size)
 
-
-    async def get_portfolio(self) -> GetPortfolioResponse:
+    async def get_portfolio(
+            self,
+            invest_api_key: str,
+            account_id: str,
+            instrument_id: str,
+    ) -> GetPortfolioResponse:
         portfolio = await self.operations_stub.GetPortfolio(
-            operations_pb2.PortfolioRequest(account_id=self.account_id, currency="RUB"),
-            metadata=self._get_metadata()
+            operations_pb2.PortfolioRequest(account_id=account_id, currency="RUB"),
+            metadata=self._get_metadata(invest_api_key)
         )
 
         rub_position = next(
@@ -69,7 +72,7 @@ class ApiBroker(IBroker):
         rub = ApiBroker.quotation_to_float(rub_position.quantity) if rub_position else 0.0
 
         instrument_position = next(
-            (pos for pos in portfolio.positions if pos.figi == self.figi),
+            (pos for pos in portfolio.positions if pos.instrument_uid == instrument_id),
             None
         )
         shares = int(ApiBroker.quotation_to_float(instrument_position.quantity)) if instrument_position else 0
@@ -84,6 +87,9 @@ class ApiBroker(IBroker):
 
     async def place_order(
             self,
+            invest_api_key: str,
+            account_id: str,
+            instrument_id: str,
             operation: OperationType,
             quantity: int,
             expected_price: float | None = None
@@ -91,10 +97,10 @@ class ApiBroker(IBroker):
         direction = orders_pb2.OrderDirection.ORDER_DIRECTION_BUY if operation == OperationType.Buy else orders_pb2.OrderDirection.ORDER_DIRECTION_SELL
         try:
             request = orders_pb2.PostOrderRequest(
-                instrument_id=self.instrument_id,
+                instrument_id=instrument_id,
                 quantity=quantity,
                 direction=direction,
-                account_id=self.account_id,
+                account_id=account_id,
                 order_type=orders_pb2.OrderType.ORDER_TYPE_MARKET,
                 order_id=str(datetime.now().timestamp())
             )
@@ -103,7 +109,7 @@ class ApiBroker(IBroker):
 
             response = await self.orders_stub.PostOrder(
                 request,
-                metadata=self._get_metadata()
+                metadata=self._get_metadata(invest_api_key)
             )
 
             self.logger.info(f"Place order response: {response}")
@@ -123,14 +129,21 @@ class ApiBroker(IBroker):
             return False
 
 
-    async def get_max_lots(self, operation: OperationType, expected_price: float | None = None) -> int:
+    async def get_max_lots(
+            self,
+            invest_api_key: str,
+            instrument_id: str,
+            account_id: str,
+            operation: OperationType,
+            expected_price: float | None = None
+    ) -> int:
         try:
             response = await self.orders_stub.GetMaxLots(
                 orders_pb2.GetMaxLotsRequest(
-                    account_id=self.account_id,
-                    instrument_id=self.instrument_id
+                    account_id=account_id,
+                    instrument_id=instrument_id
                 ),
-                metadata=self._get_metadata()
+                metadata=self._get_metadata(invest_api_key)
             )
             if operation == OperationType.Buy:
                 return response.buy_limits.buy_max_lots
@@ -141,11 +154,11 @@ class ApiBroker(IBroker):
             self.logger.error(f"Error getting max lots: {str(e)}")
             return 0
 
-    NANO_CONVERSION_FACTOR = 10e-9
+    NANO_CONVERSION_FACTOR = 1e-9
     @staticmethod
     def quotation_to_float(quotation: common_pb2.Quotation) -> float:
         return quotation.units + quotation.nano * ApiBroker.NANO_CONVERSION_FACTOR
 
-
-    def _get_metadata(self):
-        return [('authorization', f'Bearer {self.invest_api_key}')]
+    @staticmethod
+    def _get_metadata(invest_api_key: str):
+        return [('authorization', f'Bearer {invest_api_key}')]

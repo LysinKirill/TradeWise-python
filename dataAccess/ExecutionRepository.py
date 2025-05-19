@@ -2,6 +2,8 @@ from datetime import datetime, timezone
 from pydapper.commands import CommandsAsync
 from dataAccess.interfaces.IExecutionRepository import IExecutionRepository, ExecutionRecord, ExecutionStatus
 from dataAccess.interfaces.IPgConnectionProvider import IPgConnectionProvider
+from dataAccess.models.common.ModelInfo import ModelInfo
+from dataAccess.models.common.UserInfo import UserInfo
 
 
 class ExecutionRepository(IExecutionRepository):
@@ -13,7 +15,7 @@ class ExecutionRepository(IExecutionRepository):
         user_id: int,
         model_id: int,
         deadline: datetime | None = None
-    ) -> ExecutionRecord:
+    ) -> int:
         async with self.connection_provider.get_connection() as commands:
             commands: CommandsAsync
 
@@ -41,15 +43,7 @@ class ExecutionRepository(IExecutionRepository):
                 }
             )
 
-            return ExecutionRecord(
-                id=execution_id,
-                user_id=user_id,
-                model_id=model_id,
-                status=ExecutionStatus.PENDING,
-                started_at=None,
-                finished_at=None,
-                deadline=deadline
-            )
+            return execution_id
 
     async def get_execution(self, execution_id: int) -> ExecutionRecord | None:
         async with self.connection_provider.get_connection() as commands:
@@ -58,15 +52,27 @@ class ExecutionRepository(IExecutionRepository):
             record = await commands.query_first_async(
                 '''
                 SELECT
-                    id,
-                    user_id,
-                    model_id,
-                    status,
-                    started_at,
-                    finished_at,
-                    deadline
-                FROM model_executions
-                WHERE id = ?execution_id?
+                    e.id,
+                    e.status,
+                    e.started_at,
+                    e.finished_at,
+                    e.deadline,
+                    e.max_budget,
+                    e.current_spent,
+                    e.shares_owned,
+                    u.id as user_id,
+                    u.email,
+                    u.invest_api_key,
+                    u.invest_account_id,
+                    m.id as model_id,
+                    m.instrument_id,
+                    m.name,
+                    m.type,
+                    m.created_at as model_created_at
+                FROM model_executions e
+                JOIN users u ON e.user_id = u.id
+                JOIN models m ON e.model_id = m.id
+                WHERE e.id = ?execution_id?
                 ''',
                 param={"execution_id": execution_id}
             )
@@ -74,15 +80,7 @@ class ExecutionRepository(IExecutionRepository):
             if not record:
                 return None
 
-            return ExecutionRecord(
-                id=record['id'],
-                user_id=record['user_id'],
-                model_id=record['model_id'],
-                status=ExecutionStatus(record['status']),
-                started_at=record['started_at'],
-                finished_at=record['finished_at'],
-                deadline=record['deadline']
-            )
+            return ExecutionRepository._parse_execution_record(record)
 
     async def get_executions_by_status(
         self,
@@ -101,7 +99,10 @@ class ExecutionRepository(IExecutionRepository):
                     status,
                     started_at,
                     finished_at,
-                    deadline
+                    deadline,
+                    max_budget,
+                    current_spent,
+                    shares_owned
                 FROM model_executions
                 WHERE status = ANY(?statuses?)
                 ORDER BY 
@@ -114,18 +115,7 @@ class ExecutionRepository(IExecutionRepository):
                 param={"statuses": status_values}
             )
 
-            return [
-                ExecutionRecord(
-                    id=record['id'],
-                    user_id=record['user_id'],
-                    model_id=record['model_id'],
-                    status=ExecutionStatus(record['status']),
-                    started_at=record['started_at'],
-                    finished_at=record['finished_at'],
-                    deadline=record['deadline']
-                )
-                for record in records
-            ]
+            return list(map(ExecutionRepository._parse_execution_record, records))
 
     async def update_execution_status(
         self,
@@ -200,3 +190,52 @@ class ExecutionRepository(IExecutionRepository):
             )
 
             return updated
+
+    async def update_execution_financials(
+            self,
+            execution_id: int,
+            current_spent_increment: float,
+            shares_owned_increment: int
+    ) -> bool:
+        async with self.connection_provider.get_connection() as commands:
+            updated = await commands.execute_async(
+                '''
+                UPDATE model_executions
+                SET 
+                    current_spent = current_spent + ?current_spent_increment?,
+                    shares_owned = shares_owned + ?shares_owned_increment?
+                WHERE id = ?execution_id?
+                ''',
+                param={
+                    "current_spent_increment": current_spent_increment,
+                    "shares_owned_increment": shares_owned_increment,
+                    "execution_id": execution_id
+                }
+            )
+            return updated > 0
+
+    @staticmethod
+    def _parse_execution_record(record: dict) -> ExecutionRecord:
+        return ExecutionRecord(
+            id=record['id'],
+            status=ExecutionStatus(record['status']),
+            started_at=record['started_at'],
+            finished_at=record['finished_at'],
+            deadline=record['deadline'],
+            max_budget=record['max_budget'],
+            current_spent=record['current_spent'],
+            shares_owned=record['shares_owned'],
+            user_info=UserInfo(
+                id=record['user_id'],
+                email=record['email'],
+                invest_api_key=record['invest_api_key'],
+                invest_account_id=record['invest_account_id']
+            ),
+            model_info=ModelInfo(
+                id=record['model_id'],
+                instrument_id=record['instrument_id'],
+                name=record['name'],
+                type=record['type'],
+                created_at=record['model_created_at']
+            )
+        )

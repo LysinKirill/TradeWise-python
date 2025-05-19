@@ -1,5 +1,6 @@
 from app.domain.models.ml_model.ShortModelInfoModel import ShortModelInfoModel
 from app.domain.models.ml_model.responses.GetAllModelsInfoResponseModel import GetAllModelsInfoResponseModel
+from app.domain.models.ml_model.responses.GetModelResponseModel import GetModelResponseModel
 from app.domain.services.IModelService import IModelService
 from dataAccess.interfaces.IModelRepository import IModelRepository
 from dataAccess.models.model.ShortModelInfo import ShortModelInfo
@@ -13,6 +14,9 @@ class ModelService(IModelService):
     ):
         self.model_repository = model_repository
         self.fallback_model_repository = fallback_model_repository
+
+    async def get_model(self, model_id: int) -> GetModelResponseModel:
+        self.model_repository.get
 
 
     async def get_all_models_info(self) -> GetAllModelsInfoResponseModel:
