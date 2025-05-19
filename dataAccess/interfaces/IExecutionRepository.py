@@ -11,7 +11,7 @@ class IExecutionRepository(ABC):
         user_id: int,
         model_id: int,
         deadline: datetime | None = None
-    ) -> ExecutionRecord:
+    ) -> int:
         pass
 
     @abstractmethod
@@ -45,4 +45,12 @@ class IExecutionRepository(ABC):
 
     @abstractmethod
     async def cleanup_expired_executions(self) -> int:
+        pass
+
+    async def update_execution_financials(
+            self,
+            execution_id: int,
+            current_spent_increment: float,
+            shares_owned_increment: int
+    ) -> bool:
         pass

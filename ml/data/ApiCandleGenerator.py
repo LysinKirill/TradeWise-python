@@ -33,7 +33,7 @@ class ApiCandleGenerator(ICandleGenerator):
         instrument_id: str,
         preload_candles_count: int = 0,
         stop_event: asyncio.Event | None = None
-    ) -> AsyncGenerator[    Candle | None, None]:
+    ) -> AsyncGenerator[Candle | None, None]:
         preload_request = _PreloadCandleRequest(
             instrument_id=instrument_id,
             preload_candles_count=preload_candles_count,
