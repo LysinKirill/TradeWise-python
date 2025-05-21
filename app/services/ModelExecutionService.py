@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Dict, AsyncGenerator
 import logging
 import numpy as np
@@ -12,6 +12,7 @@ from app.domain.models.execution.responses.GetExecutionsResponse import GetExecu
 from app.domain.models.ml_model.ShortModelInfoModel import ShortModelInfoModel
 from app.domain.models.user.UserInfoModel import UserInfoModel
 from app.domain.services.IModelExecutionService import IModelExecutionService
+from app.domain.services.IUserService import IUserService
 from dataAccess.interfaces.IExecutionRepository import IExecutionRepository
 from dataAccess.interfaces.IModelRepository import IModelRepository
 from dataAccess.models.common.ModelInfo import ModelInfo
@@ -38,18 +39,19 @@ class ModelExecutionService(IModelExecutionService):
             self,
             model_repository: IModelRepository,
             execution_repository: IExecutionRepository,
+            user_service: IUserService,
             candle_generator_factory: ICandleGenerator,
             broker: IBroker,
             trading_window_manager: ITradingWindowManager,
             device: str = "cuda" if torch.cuda.is_available() else "cpu"
     ):
+        self.user_service = user_service
         self.model_repository = model_repository
         self.execution_repository = execution_repository
         self.candle_generator_factory = candle_generator_factory
         self.broker = broker
         self.trading_window_manager = trading_window_manager
         self.device = device
-
 
         self.active_executions: Dict[int, asyncio.Task] = {}
         self.candle_data: Dict[str, tuple[datetime, list]] = {}
@@ -65,10 +67,13 @@ class ModelExecutionService(IModelExecutionService):
 
 
     async def start_execution(self, request: StartExecutionRequestModel) -> int:
+        deadline = datetime.now(timezone.utc) + timedelta(seconds=request.max_duration_in_seconds)
+
         execution_id = await self.execution_repository.create_execution(
-            user_id=request.user_id,
+            user_email=request.user_email,
             model_id=request.model_id,
-            deadline=request.deadline
+            deadline=deadline,
+            allocated_amount=request.allocated_balance
         )
         return execution_id
 

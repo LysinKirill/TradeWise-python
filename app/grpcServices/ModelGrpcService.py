@@ -1,7 +1,9 @@
 import grpc
 from app.debug.ExceptionLogger import exception_handler
+from app.domain.models.execution.requests.StartExecutionRequestModel import StartExecutionRequestModel
 from app.domain.models.ml_model.ShortModelInfoModel import ShortModelInfoModel
 from app.domain.services.IClaimValuesService import IClaimValuesService
+from app.domain.services.IModelExecutionService import IModelExecutionService
 from app.domain.services.IModelService import IModelService
 from app.infrastructure.JwtAuthorizationDecorator import jwt_authorization
 from app.infrastructure.RequestResponseLogging import request_response_logging
@@ -13,9 +15,11 @@ class ModelGrpcService(model_pb2_grpc.ModelServiceServicer):
     def __init__(
             self,
             model_service: IModelService,
+            model_execution_service: IModelExecutionService,
             claim_values_service: IClaimValuesService
     ):
         self.model_service = model_service
+        self.model_execution_service = model_execution_service
         self.claim_values_service = claim_values_service
 
     @exception_handler
@@ -28,8 +32,16 @@ class ModelGrpcService(model_pb2_grpc.ModelServiceServicer):
         )
 
     async def StartExecution(self, request, context):
-        await context.abort(grpc.StatusCode.UNIMPLEMENTED, "Method is not yet implemented")
-        return model_pb2.StartExecutionResponse(execution_id=314125)
+        user_email = await self.claim_values_service.get_email()
+        started_execution_id = await self.model_execution_service.start_execution(
+            StartExecutionRequestModel(
+                user_email=user_email,
+                model_id=request.model_id,
+                allocated_balance=request.initial_balance,
+                max_duration_in_seconds=request.max_execution_duration_seconds
+            )
+        )
+        return model_pb2.StartExecutionResponse(execution_id=started_execution_id)
 
     async def GetExecutionStatus(self, request, context):
         await context.abort(grpc.StatusCode.UNIMPLEMENTED, "Method is not yet implemented")

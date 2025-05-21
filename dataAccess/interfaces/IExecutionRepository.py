@@ -8,9 +8,10 @@ class IExecutionRepository(ABC):
     @abstractmethod
     async def create_execution(
         self,
-        user_id: int,
+        user_email: str,
         model_id: int,
-        deadline: datetime | None = None
+        allocated_amount: float,
+        deadline: datetime | None = None,
     ) -> int:
         pass
 

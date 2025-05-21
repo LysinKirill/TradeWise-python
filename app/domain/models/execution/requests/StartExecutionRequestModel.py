@@ -4,6 +4,7 @@ from datetime import datetime
 
 @dataclass(frozen=True)
 class StartExecutionRequestModel:
-    user_id: int
+    user_email: str
     model_id: int
-    deadline: datetime | None
+    allocated_balance: float
+    max_duration_in_seconds: int

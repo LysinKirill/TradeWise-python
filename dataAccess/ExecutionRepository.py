@@ -11,37 +11,50 @@ class ExecutionRepository(IExecutionRepository):
         self.connection_provider = connection_provider
 
     async def create_execution(
-        self,
-        user_id: int,
-        model_id: int,
-        deadline: datetime | None = None
+            self,
+            user_email: str,
+            model_id: int,
+            allocated_amount: float,
+            deadline: datetime | None = None
     ) -> int:
         async with self.connection_provider.get_connection() as commands:
             commands: CommandsAsync
 
-            execution_id = await commands.execute_scalar_async(
+            execution_id_dict = await commands.query_first_or_default_async(
                 '''
+                WITH user_lookup AS (
+                    SELECT id FROM users 
+                    WHERE email = ?email?
+                    LIMIT 1
+                )
                 INSERT INTO model_executions (
                     user_id,
                     model_id,
                     status,
-                    deadline
+                    deadline,
+                    max_budget
                 )
-                VALUES (
-                    ?user_id?,
+                SELECT 
+                    ul.id,
                     ?model_id?,
                     ?status?,
-                    ?deadline?
-                )
+                    ?deadline?,
+                    ?budget?
+                FROM user_lookup ul
                 RETURNING id;
                 ''',
                 param={
-                    "user_id": user_id,
+                    "email": user_email,
                     "model_id": model_id,
                     "status": ExecutionStatus.PENDING.value,
-                    "deadline": deadline
-                }
+                    "deadline": deadline,
+                    "budget": allocated_amount,
+                },
+                default=None
             )
+
+            if not (execution_id := execution_id_dict['id']):
+                raise ValueError(f"Failed to create execution - user with email {user_email} not found")
 
             return execution_id
 
