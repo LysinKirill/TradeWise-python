@@ -27,6 +27,7 @@ from app.services.ModelService import ModelService
 from app.services.UserService import UserService
 from app.services.ClaimValuesService import ClaimValuesService
 from app.infrastructure.GrpcContextAccessor import GrpcContextAccessor
+from app.workers.ModelExecutionWorker import ModelExecutionWorker
 from dataAccess.ExecutionRepository import ExecutionRepository
 from dataAccess.LocalModelRepository import LocalModelRepository
 from dataAccess.UserRepository import UserRepository
@@ -203,6 +204,12 @@ class Container(containers.DeclarativeContainer):
         BacktestGrpcService
     )
 
+    model_execution_worker = providers.Factory(
+        ModelExecutionWorker,
+        execution_service=model_execution_service,
+        interval_seconds=60
+    )
+
 
 async def serve():
     load_dotenv()
@@ -249,11 +256,16 @@ async def serve():
     await server.start()
     logger.info("Server is running...")
 
+    worker = container.model_execution_worker()
+    worker_task = asyncio.create_task(worker.start())
+
     try:
         while True:
             await asyncio.sleep(1)
     except (asyncio.CancelledError, KeyboardInterrupt):
         logger.info("Shutdown signal received. Gracefully stopping server...")
+        await worker.stop()
+        await worker_task
         await server.stop(GRACE_PERIOD_IN_SECOND)
 
 

@@ -106,17 +106,26 @@ class ExecutionRepository(IExecutionRepository):
             records = await commands.query_async(
                 '''
                 SELECT
-                    id,
-                    user_id,
-                    model_id,
-                    status,
-                    started_at,
-                    finished_at,
-                    deadline,
-                    max_budget,
-                    current_spent,
-                    shares_owned
-                FROM model_executions
+                    e.id,
+                    e.status,
+                    e.started_at,
+                    e.finished_at,
+                    e.deadline,
+                    e.max_budget,
+                    e.current_spent,
+                    e.shares_owned,
+                    u.id as user_id,
+                    u.email,
+                    u.invest_api_key,
+                    u.invest_account_id,
+                    m.id as model_id,
+                    m.instrument_id,
+                    m.name,
+                    m.type,
+                    m.created_at as model_created_at
+                FROM model_executions e
+                JOIN users u ON e.user_id = u.id
+                JOIN models m ON e.model_id = m.id
                 WHERE status = ANY(?statuses?)
                 ORDER BY 
                     CASE 

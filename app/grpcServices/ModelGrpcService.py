@@ -1,6 +1,6 @@
 import grpc
 from app.debug.ExceptionLogger import exception_handler
-from app.domain.models.execution.requests.StartExecutionRequestModel import StartExecutionRequestModel
+from app.domain.models.execution.requests.CreateExecutionRequestModel import CreateExecutionRequestModel
 from app.domain.models.ml_model.ShortModelInfoModel import ShortModelInfoModel
 from app.domain.services.IClaimValuesService import IClaimValuesService
 from app.domain.services.IModelExecutionService import IModelExecutionService
@@ -33,8 +33,8 @@ class ModelGrpcService(model_pb2_grpc.ModelServiceServicer):
 
     async def StartExecution(self, request, context):
         user_email = await self.claim_values_service.get_email()
-        started_execution_id = await self.model_execution_service.start_execution(
-            StartExecutionRequestModel(
+        started_execution_id = await self.model_execution_service.create_execution(
+            CreateExecutionRequestModel(
                 user_email=user_email,
                 model_id=request.model_id,
                 allocated_balance=request.initial_balance,

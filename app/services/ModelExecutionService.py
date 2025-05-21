@@ -7,7 +7,7 @@ import torch
 
 from app.domain.models.execution.ExecutionModel import ExecutionModel
 from app.domain.models.execution.ExecutionStatusModel import ExecutionStatusModel
-from app.domain.models.execution.requests.StartExecutionRequestModel import StartExecutionRequestModel
+from app.domain.models.execution.requests.CreateExecutionRequestModel import CreateExecutionRequestModel
 from app.domain.models.execution.responses.GetExecutionsResponse import GetExecutionsResponseModel
 from app.domain.models.ml_model.ShortModelInfoModel import ShortModelInfoModel
 from app.domain.models.user.UserInfoModel import UserInfoModel
@@ -66,7 +66,7 @@ class ModelExecutionService(IModelExecutionService):
         return GetExecutionsResponseModel(executions=list(map(ModelExecutionService._get_domain_execution, executions)))
 
 
-    async def start_execution(self, request: StartExecutionRequestModel) -> int:
+    async def create_execution(self, request: CreateExecutionRequestModel) -> int:
         deadline = datetime.now(timezone.utc) + timedelta(seconds=request.max_duration_in_seconds)
 
         execution_id = await self.execution_repository.create_execution(
@@ -76,6 +76,23 @@ class ModelExecutionService(IModelExecutionService):
             allocated_amount=request.allocated_balance
         )
         return execution_id
+
+    async def start_execution(self, execution_id: int) -> bool:
+        try:
+            execution = await self.execution_repository.get_execution(execution_id)
+            if not execution:
+                logger.error(f"Execution {execution_id} not found")
+                return False
+
+            if execution.status != ExecutionStatus.PENDING:
+                logger.error(f"Execution {execution_id} is in state {execution.status}. Can only start execution with PENDING status")
+                return False
+
+            success = await self.execution_repository.update_execution_status(execution_id, ExecutionStatus.RUNNING)
+            return success
+        except Exception as e:
+            logger.error(f"Failed to start execution {execution_id}: {e}")
+            return False
 
     async def run_execution(self, execution_id: int) -> bool:
         execution = await self.execution_repository.get_execution(execution_id)

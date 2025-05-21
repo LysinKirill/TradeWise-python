@@ -3,7 +3,7 @@ from datetime import datetime
 
 
 @dataclass(frozen=True)
-class StartExecutionRequestModel:
+class CreateExecutionRequestModel:
     user_email: str
     model_id: int
     allocated_balance: float
