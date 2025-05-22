@@ -92,6 +92,8 @@ class ModelExecutionService(IModelExecutionService):
             deadline=deadline,
             allocated_amount=request.allocated_balance
         )
+
+        logger.info(f"Created execution with ID {execution_id}")
         return execution_id
 
     async def start_execution(self, execution_id: int) -> bool:
@@ -110,6 +112,7 @@ class ModelExecutionService(IModelExecutionService):
                 ExecutionStatus.RUNNING,
                 started_at=datetime.now(timezone.utc)
             )
+            logger.info(f"Started execution with ID {execution_id}")
             return success
         except Exception as e:
             logger.error(f"Failed to start execution {execution_id}: {e}")
@@ -195,11 +198,14 @@ class ModelExecutionService(IModelExecutionService):
                 ModelExecutionService._get_domain_status(ExecutionStatus.COMPLETED)
             )
 
-        await self.execution_repository.update_execution_status(
+        success = await self.execution_repository.update_execution_status(
             execution_id,
             ExecutionStatus.COMPLETED,
             finished_at=datetime.now(timezone.utc)
         )
+        if success:
+            logger.info(f"Stopped execution with ID {execution_id}")
+
 
 
     async def _process_single_step(
