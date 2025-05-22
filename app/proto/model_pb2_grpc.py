@@ -55,6 +55,11 @@ class ModelServiceStub(object):
                 request_serializer=model__pb2.GetExecutionStatusRequest.SerializeToString,
                 response_deserializer=model__pb2.GetExecutionStatusResponse.FromString,
                 _registered_method=True)
+        self.GetExecutionInfo = channel.unary_unary(
+                '/model.ModelService/GetExecutionInfo',
+                request_serializer=model__pb2.GetExecutionInfoRequest.SerializeToString,
+                response_deserializer=model__pb2.ExecutionInfo.FromString,
+                _registered_method=True)
 
 
 class ModelServiceServicer(object):
@@ -84,6 +89,12 @@ class ModelServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetExecutionInfo(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ModelServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -106,6 +117,11 @@ def add_ModelServiceServicer_to_server(servicer, server):
                     servicer.GetExecutionStatus,
                     request_deserializer=model__pb2.GetExecutionStatusRequest.FromString,
                     response_serializer=model__pb2.GetExecutionStatusResponse.SerializeToString,
+            ),
+            'GetExecutionInfo': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetExecutionInfo,
+                    request_deserializer=model__pb2.GetExecutionInfoRequest.FromString,
+                    response_serializer=model__pb2.ExecutionInfo.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -216,6 +232,33 @@ class ModelService(object):
             '/model.ModelService/GetExecutionStatus',
             model__pb2.GetExecutionStatusRequest.SerializeToString,
             model__pb2.GetExecutionStatusResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetExecutionInfo(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/model.ModelService/GetExecutionInfo',
+            model__pb2.GetExecutionInfoRequest.SerializeToString,
+            model__pb2.ExecutionInfo.FromString,
             options,
             channel_credentials,
             insecure,
