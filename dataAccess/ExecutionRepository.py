@@ -62,7 +62,7 @@ class ExecutionRepository(IExecutionRepository):
         async with self.connection_provider.get_connection() as commands:
             commands: CommandsAsync
 
-            record = await commands.query_first_async(
+            record = await commands.query_first_or_default_async(
                 '''
                 SELECT
                     e.id,
@@ -87,7 +87,8 @@ class ExecutionRepository(IExecutionRepository):
                 JOIN models m ON e.model_id = m.id
                 WHERE e.id = ?execution_id?
                 ''',
-                param={"execution_id": execution_id}
+                param={"execution_id": execution_id},
+                default=None
             )
 
             if not record:

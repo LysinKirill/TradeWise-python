@@ -1,4 +1,4 @@
-from app.debug.ExceptionLogger import exception_handler
+from app.debug.ExceptionHandler import exception_handler
 from app.domain.exceptions.user.NoAccountsExistException import NoAccountsExistException
 from app.domain.models.user.requests.AddInvestApiKeyRequestModel import AddInvestApiKeyRequestModel
 from app.domain.models.user.requests.GetAccountsRequestModel import GetAccountsRequestModel

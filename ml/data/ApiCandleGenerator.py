@@ -55,8 +55,7 @@ class ApiCandleGenerator(ICandleGenerator):
 
     async def _attempt_preload_candles(self, request: _PreloadCandleRequest) -> list[CandleModel] | None:
         now = datetime.now(timezone.utc)
-        # TODO: replace +500 with +5
-        datetime_from = now - timedelta(minutes=request.preload_candles_count + 500)
+        datetime_from = now - timedelta(minutes=request.preload_candles_count + 5)
         datetime_to = now
 
         last_candles = await self.marketdata_client.get_candles(

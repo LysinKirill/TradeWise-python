@@ -13,7 +13,7 @@ class ExecutionModel:
     finished_at: datetime | None
     deadline: datetime | None
     max_budget: float
-    current_spend: float
+    current_spent: float
     shares_owned: int
     user_info: UserInfoModel
     model_info: ShortModelInfoModel

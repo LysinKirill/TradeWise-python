@@ -71,12 +71,12 @@ class PgModelRepository(IModelRepository):
     async def get_model(
             self,
             model_id: int,
-            model_for_init: torch.nn.Module | None
+            model_for_init: torch.nn.Module | None = None
     ) -> GetModelResponse | None:
         async with self.connection_provider.get_connection() as commands:
             commands: CommandsAsync
 
-            record = await commands.query_first_async(
+            record = await commands.query_first_or_default_async(
                 '''
                 SELECT
                     id,
@@ -89,7 +89,8 @@ class PgModelRepository(IModelRepository):
                 FROM models 
                 WHERE id = ?model_id?
                 ''',
-                param={"model_id": model_id}
+                param={"model_id": model_id},
+                default=None
             )
 
             if not record:
@@ -97,10 +98,9 @@ class PgModelRepository(IModelRepository):
 
             if model_for_init is None:
                 config_class = PgModelRepository._get_configuration_class_by_type(record['model_type'])
-                full_model_info_settings = config_class.from_json(record['config']) if record.get('config') else None
                 full_model_info = PgModelRepository._load_dataclass(
                     FullModelInfo,
-                    full_model_info_settings,
+                    json.loads(record['config']),
                     model_configuration=config_class)
                 model_cls = PgModelRepository._get_model_class_by_type(record['model_type'])
                 model_for_init = model_cls(full_model_info).to(self.device)

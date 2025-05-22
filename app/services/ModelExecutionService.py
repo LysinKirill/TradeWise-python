@@ -5,12 +5,16 @@ import logging
 import numpy as np
 import torch
 
+from app.domain.exceptions.execution.ExecutionNotFoundException import ExecutionNotFoundException
+from app.domain.exceptions.execution.InvalidStateTransitionException import InvalidStateTransitionException
+from app.domain.exceptions.model.ModelNotFoundException import ModelNotFoundException
 from app.domain.models.execution.ExecutionModel import ExecutionModel
 from app.domain.models.execution.ExecutionStatusModel import ExecutionStatusModel
 from app.domain.models.execution.requests.CreateExecutionRequestModel import CreateExecutionRequestModel
 from app.domain.models.execution.responses.GetExecutionsResponse import GetExecutionsResponseModel
 from app.domain.models.ml_model.ShortModelInfoModel import ShortModelInfoModel
 from app.domain.models.user.UserInfoModel import UserInfoModel
+from app.domain.models.invest.CandleModel import CandleModel
 from app.domain.services.IModelExecutionService import IModelExecutionService
 from app.domain.services.IUserService import IUserService
 from dataAccess.interfaces.IExecutionRepository import IExecutionRepository
@@ -23,7 +27,6 @@ from dataAccess.models.model.GetModelResponse import GetModelResponse
 from ml.data.interface.IBroker import IBroker
 from ml.data.interface.ICandleGenerator import ICandleGenerator
 from ml.data.interface.ITradingWindowManager import ITradingWindowManager
-from ml.data.model.Candle import Candle
 from ml.data.model.OperationType import OperationType
 from ml.dataAugmentation.Normalizer import Normalizer
 
@@ -55,8 +58,18 @@ class ModelExecutionService(IModelExecutionService):
 
         self.active_executions: Dict[int, asyncio.Task] = {}
         self.candle_data: Dict[str, tuple[datetime, list]] = {}
-        self.candle_generators: Dict[str, AsyncGenerator[Candle | None, None]] = {}
+        self.candle_generators: Dict[str, AsyncGenerator[CandleModel | None, None]] = {}
         self.lock = asyncio.Lock()
+
+    async def get_execution(self, execution_id: int) -> ExecutionModel:
+        execution = await self.execution_repository.get_execution(execution_id)
+        if execution is None:
+            raise ExecutionNotFoundException(execution_id, "PostgreSQL model_executions table")
+
+        return ModelExecutionService._get_domain_execution(execution)
+
+    async def get_execution_status(self, execution_id: int) -> ExecutionStatusModel:
+        return (await self.get_execution(execution_id)).status
 
     async def get_executions(self, status: ExecutionStatusModel | None) -> GetExecutionsResponseModel:
         domain_statuses = [status] if status else list(ExecutionStatusModel)
@@ -68,6 +81,10 @@ class ModelExecutionService(IModelExecutionService):
 
     async def create_execution(self, request: CreateExecutionRequestModel) -> int:
         deadline = datetime.now(timezone.utc) + timedelta(seconds=request.max_duration_in_seconds)
+        # TODO: replace with get_short_model_info
+        model = await self.model_repository.get_model(request.model_id)
+        if model is None:
+            raise ModelNotFoundException(request.model_id, model_source="PostgreSQL model table")
 
         execution_id = await self.execution_repository.create_execution(
             user_email=request.user_email,
@@ -88,7 +105,11 @@ class ModelExecutionService(IModelExecutionService):
                 logger.error(f"Execution {execution_id} is in state {execution.status}. Can only start execution with PENDING status")
                 return False
 
-            success = await self.execution_repository.update_execution_status(execution_id, ExecutionStatus.RUNNING)
+            success = await self.execution_repository.update_execution_status(
+                execution_id,
+                ExecutionStatus.RUNNING,
+                started_at=datetime.now(timezone.utc)
+            )
             return success
         except Exception as e:
             logger.error(f"Failed to start execution {execution_id}: {e}")
@@ -146,7 +167,7 @@ class ModelExecutionService(IModelExecutionService):
                     self.candle_data[instrument_id] = (datetime.now(timezone.utc), current_history)
 
 
-            if len(self.candle_data[instrument_id]) >= lookback:
+            if len(self.candle_data[instrument_id][1]) >= lookback:
                 await self._process_single_step(
                     execution_id,
                     instrument_id,
@@ -161,6 +182,26 @@ class ModelExecutionService(IModelExecutionService):
             await self._mark_execution_failed(execution_id)
             return False
 
+
+    async def stop_execution(self, execution_id: int):
+        execution = await self.execution_repository.get_execution(execution_id)
+        if not execution:
+            raise ExecutionNotFoundException(execution_id, "PostgreSQL model_executions table")
+
+        if execution.status == ExecutionStatus.FAILED:
+            logger.error(f"Attempted to stop execution in failed status. Execution Id: {execution_id}")
+            raise InvalidStateTransitionException(
+                ModelExecutionService._get_domain_status(execution.status),
+                ModelExecutionService._get_domain_status(ExecutionStatus.COMPLETED)
+            )
+
+        await self.execution_repository.update_execution_status(
+            execution_id,
+            ExecutionStatus.COMPLETED,
+            finished_at=datetime.now(timezone.utc)
+        )
+
+
     async def _process_single_step(
             self,
             execution_id: int,
@@ -173,7 +214,7 @@ class ModelExecutionService(IModelExecutionService):
         normalizer = self._create_normalizer(model_info.config)
         trading_params = model_info.config.get('trading_params', {}) if model_info.config else {}
 
-        candles = self.candle_data[instrument_id][-lookback:]
+        candles = self.candle_data[instrument_id][1][-lookback:]
         current_candle = candles[-1]
 
         features = np.array([[c.close] for c in candles])
@@ -343,7 +384,7 @@ class ModelExecutionService(IModelExecutionService):
             finished_at=db_execution.finished_at,
             deadline=db_execution.deadline,
             max_budget=db_execution.max_budget,
-            current_spend=db_execution.current_spent,
+            current_spent=db_execution.current_spent,
             shares_owned=db_execution.shares_owned,
         )
 
@@ -365,3 +406,12 @@ class ModelExecutionService(IModelExecutionService):
             model_type=db_model.type,
             created_at=db_model.created_at,
         )
+
+    @staticmethod
+    def _get_domain_status(db_status: ExecutionStatus) -> ExecutionStatusModel:
+        match db_status:
+            case ExecutionStatus.PENDING: return ExecutionStatusModel.PENDING
+            case ExecutionStatus.FAILED: return ExecutionStatusModel.FAILED
+            case ExecutionStatus.RUNNING: return ExecutionStatusModel.RUNNING
+            case ExecutionStatus.COMPLETED: return ExecutionStatusModel.COMPLETED
+        return ExecutionStatusModel.UNKNOWN
