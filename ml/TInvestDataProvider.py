@@ -8,7 +8,7 @@ from typing import Optional, List
 from grpc import aio, ssl_channel_credentials
 from google.protobuf.timestamp_pb2 import Timestamp
 
-import instruments_pb2_grpc
+from externalClients.TInvestApi.proto import instruments_pb2_grpc
 from externalClients.TInvestApi.proto import marketdata_pb2_grpc
 from externalClients.TInvestApi.proto.marketdata_pb2 import (
     GetCandlesRequest,
