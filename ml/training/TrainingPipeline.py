@@ -56,11 +56,11 @@ class TrainingPipeline:
 
         load_dotenv()
         pg_connection_provider = PgConnectionProvider(
-            username=os.getenv('DB_USER', 'postgres'),
-            password=os.getenv('DB_PASSWORD', 'postgres'),
-            host=os.getenv('DB_HOST', 'python-db'),
-            port=int(os.getenv('DB_PORT', 5432)),
-            db=os.getenv('DB_NAME', 'python-db')
+            username=os.getenv('PYTHON_DB_USER'),
+            password=os.getenv('PYTHON_DB_PASSWORD'),
+            host=os.getenv('PYTHON_DB_HOST'),
+            port=int(os.getenv('PYTHON_DB_PORT')),
+            db=os.getenv('PYTHON_DB_NAME')
         )
         self.model_repository = PgModelRepository(
             connection_provider=pg_connection_provider
@@ -179,15 +179,7 @@ class TrainingPipeline:
 
     async def persist_model(self) -> None:
         model_name = self.model_info.name
-        save_dir = Path("../savedModels")
-        save_dir.mkdir(parents=True, exist_ok=True)
-
-        torch.save(self.model.state_dict(), save_dir / f"{model_name}_LAST.pth")
-
         config_dict = asdict(self.model_info)
-        with open(save_dir / f"{model_name}_config.json", "w") as f:
-            json.dump(config_dict, f, indent=4, cls=DateTimeEncoder)
-
 
         await self.model_repository.add_model(
             instrument_id=self.model_info.instrument_id,
