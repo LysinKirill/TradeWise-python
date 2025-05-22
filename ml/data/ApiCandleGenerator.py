@@ -65,7 +65,7 @@ class ApiCandleGenerator(ICandleGenerator):
         if last_candles is None or len(last_candles) == 0:
             return None
 
-        return last_candles
+        return last_candles[-request.preload_candles_count:]
 
 
 
