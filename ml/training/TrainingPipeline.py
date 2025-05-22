@@ -142,6 +142,9 @@ class TrainingPipeline:
         features = df[['close']].values
         normalized_features = self.scaler.fit_transform(features)
 
+        self.model_info.normalizer_maxs = list(self.scaler.maxs)
+        self.model_info.normalizer_mins = list(self.scaler.mins)
+
         self.training_df = df.assign(
             normalized_features=list(normalized_features)
         )
