@@ -1,12 +1,11 @@
 import asyncio
 from collections.abc import AsyncGenerator
 from dataclasses import dataclass
-
 from app.domain.models.invest.requests.GetCandlesRequestModel import GetCandlesRequestModel
+from app.domain.models.invest.CandleModel import CandleModel
 from externalClients.TInvestApi.handlers.MarketDataClient import MarketDataClient
 from ml.data.RetryPolicy import RetryPolicy
 from ml.data.interface.ICandleGenerator import ICandleGenerator
-from ml.data.model.Candle import Candle
 from datetime import datetime, timezone, timedelta
 
 
@@ -31,7 +30,7 @@ class ApiCandleGenerator(ICandleGenerator):
         instrument_id: str,
         preload_candles_count: int = 0,
         stop_event: asyncio.Event | None = None
-    ) -> AsyncGenerator[Candle | None, None]:
+    ) -> AsyncGenerator[CandleModel | None, None]:
         preload_request = _PreloadCandleRequest(
             instrument_id=instrument_id,
             preload_candles_count=preload_candles_count,
@@ -54,9 +53,10 @@ class ApiCandleGenerator(ICandleGenerator):
 
 
 
-    async def _attempt_preload_candles(self, request: _PreloadCandleRequest) -> list[Candle] | None:
+    async def _attempt_preload_candles(self, request: _PreloadCandleRequest) -> list[CandleModel] | None:
         now = datetime.now(timezone.utc)
-        datetime_from = now - timedelta(minutes=request.preload_candles_count + 5)
+        # TODO: replace +500 with +5
+        datetime_from = now - timedelta(minutes=request.preload_candles_count + 500)
         datetime_to = now
 
         last_candles = await self.marketdata_client.get_candles(
@@ -66,17 +66,11 @@ class ApiCandleGenerator(ICandleGenerator):
         if last_candles is None or len(last_candles) == 0:
             return None
 
-        return list(map(lambda x: Candle(
-                open=x[0],
-                high=x[1],
-                low=x[2],
-                close=x[3],
-                timestamp=x[4]
-            ), last_candles))
+        return last_candles
 
 
 
-    async def _attempt_fetch_candle(self, instrument_id: str) -> Candle | None:
+    async def _attempt_fetch_candle(self, instrument_id: str) -> CandleModel | None:
         preload_request = _PreloadCandleRequest(
             instrument_id=instrument_id,
             preload_candles_count=1,

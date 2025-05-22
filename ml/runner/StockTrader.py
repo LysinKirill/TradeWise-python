@@ -3,11 +3,10 @@ import numpy as np
 import torch
 import asyncio
 import traceback
+from app.domain.models.invest.CandleModel import CandleModel
 from ml.data.interface.IBroker import IBroker
-
 from ml.data.interface.ICandleGenerator import ICandleGenerator
 from ml.data.interface.ITradingWindowManager import ITradingWindowManager
-from ml.data.model.Candle import Candle
 from ml.data.model.OperationType import OperationType
 from ml.dataAugmentation.Normalizer import Normalizer
 from ml.oneMinute.LSTM.StockPriceLstm import StockPriceLstm
@@ -57,7 +56,7 @@ class StockTrader:
         # State tracking
         self.current_balance: float = 0.0
         self.current_shares: int = 0
-        self.candle_history: list[Candle] = []
+        self.candle_history: list[CandleModel] = []
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
         self.model.eval().to(self.device)
@@ -79,7 +78,7 @@ class StockTrader:
             )
 
 
-    async def trading_cycle(self, current_candle: Candle):
+    async def trading_cycle(self, current_candle: CandleModel):
         """Perform one trading decision cycle"""
         #self.logger.info(f"Trading cycle started. Timestamp = {datetime.now()}")
         try:
