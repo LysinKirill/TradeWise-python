@@ -2,8 +2,8 @@ import asyncio
 import os
 import sys
 import torch
-
-from typing import Type
+import argparse
+from typing import Type, List
 from dotenv import load_dotenv
 from app.configuration.Settings import Settings
 from ml.configuration.FullModelInfo import FullModelInfo
@@ -15,6 +15,7 @@ from ml.training.TrainingPipeline import TrainingPipeline
 from dataclasses import is_dataclass, fields
 from datetime import datetime
 from typing import TypeVar
+from pathlib import Path
 
 T = TypeVar('T')
 
@@ -25,6 +26,7 @@ def get_model_class_by_type(model_type: str) -> Type[torch.nn.Module]:
         case 'lstm': return StockPriceLstm
 
     raise ValueError(f'Model type {model_type} not recognized')
+
 
 def get_configuration_class_by_type(model_type: str) -> Type:
     model_type = model_type.lower()
@@ -68,7 +70,7 @@ def load_dataclass(cls: Type[T], data: dict, **field_types) -> T:
     return cls(**converted)
 
 
-async def main(config_path: str = "./training_settings.json"):
+async def train_for_config(config_path: str):
     load_dotenv()
     settings = Settings(config_path)
 
@@ -102,13 +104,50 @@ async def main(config_path: str = "./training_settings.json"):
 
     try:
         await pipeline.run_pipeline()
-        print("Pipeline completed successfully!")
+        print(f"Pipeline completed successfully for {config_path}!")
     except Exception as e:
-        print(f"Failed to run pipeline: {str(e)}")
+        print(f"Failed to run pipeline for {config_path}: {str(e)}")
+
+
+async def main(config_paths: List[str]):
+    for config_path in config_paths:
+        print(f"\nStarting training for config: {config_path}")
+        await train_for_config(config_path)
+
+
+def get_config_files(directory: str, limit: int = None) -> List[str]:
+    path = Path(directory)
+    config_files = sorted([str(f) for f in path.glob('*.json')])
+    if limit is not None and limit > 0:
+        config_files = config_files[:limit]
+    return config_files
 
 
 if __name__ == '__main__':
-    settings_file = "./settings/oneMinute/SBER_one_minute_16_lookback.json"
+    parser = argparse.ArgumentParser(description='Run training for multiple config files.')
+    parser.add_argument('--config-dir', type=str, default="./ml/training/settings/oneMinute",
+                        help='Directory containing config files')
+    parser.add_argument('--num-models', type=int, default=None,
+                        help='Number of models to train (uses first N config files)')
+    parser.add_argument('--config-files', type=str, nargs='*',
+                        help='Specific config files to use (overrides config-dir and num-models)')
+
+    args = parser.parse_args()
+    print(args.config_dir, args.num_models)
+
+    if args.config_files:
+        config_files = args.config_files
+    else:
+        config_files = get_config_files(args.config_dir, args.num_models)
+
+    if not config_files:
+        print("No configuration files found!")
+        sys.exit(1)
+
+    print(f"Running training for {len(config_files)} config files:")
+    for cf in config_files:
+        print(f" - {cf}")
+
     if os.name == 'nt':
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
@@ -116,8 +155,8 @@ if __name__ == '__main__':
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
-            loop.run_until_complete(main(settings_file))
+            loop.run_until_complete(main(config_files))
         finally:
             loop.close()
     else:
-        asyncio.run(main(settings_file))
+        asyncio.run(main(config_files))
