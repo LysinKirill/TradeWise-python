@@ -1,9 +1,11 @@
 import pydapper
-
+import logging
 from contextlib import asynccontextmanager
 from pydapper.commands import CommandsAsync
 from dataAccess.interfaces.IPgConnectionProvider import IPgConnectionProvider
 from typing import AsyncIterator
+
+logging.getLogger('dsnparse').setLevel(logging.WARNING)
 
 
 class PgConnectionProvider(IPgConnectionProvider):

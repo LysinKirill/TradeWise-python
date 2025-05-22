@@ -10,8 +10,30 @@ service ModelService {
   rpc StartExecution(StartExecutionRequest) returns (StartExecutionResponse) {}
   rpc StopExecution(StopExecutionRequest) returns (google.protobuf.Empty) {}
   rpc GetExecutionStatus(GetExecutionStatusRequest) returns (GetExecutionStatusResponse) {}
+  rpc GetExecutionInfo(GetExecutionInfoRequest) returns (ExecutionInfo) {}
 }
 
+message GetExecutionInfoRequest {
+  int64 execution_id = 1;
+}
+
+message ExecutionInfo {
+  int64 execution_id = 1;
+  ExecutionStatus status = 2;
+  google.protobuf.Timestamp started_at = 3;
+  google.protobuf.Timestamp finished_at = 4;
+  google.protobuf.Timestamp deadline = 5;
+  double max_budget = 6;
+  double current_spent = 7;
+  int32 shares_owned = 8;
+  UserInfo user_info = 9;
+  ShortModelInfo model_info = 10;
+}
+
+message UserInfo {
+  int64 id = 1;
+  string email = 2;
+}
 
 message StopExecutionRequest {
   int64 execution_id = 1;

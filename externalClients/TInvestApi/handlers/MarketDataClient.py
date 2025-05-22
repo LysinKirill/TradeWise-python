@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 import grpc
 
+from app.domain.models.invest.CandleModel import CandleModel
 from app.domain.models.invest.InstrumentStatType import InstrumentStatType
 from app.domain.models.invest.requests import GetInstrumentStatRequestModel, GetCandlesRequestModel
 from externalClients.TInvestApi.handlers.BaseClient import BaseClient
@@ -16,7 +17,7 @@ class MarketDataClient(BaseClient):
         super().__init__(endpoint, api_key)
         self.stub = marketdata_pb2_grpc.MarketDataServiceStub(self.channel)
 
-    async def get_candles(self, request: GetCandlesRequestModel.GetCandlesRequestModel) -> list[(float, float, float, float, datetime)]:
+    async def get_candles(self, request: GetCandlesRequestModel.GetCandlesRequestModel) -> list[CandleModel]:
         invest_api_request = marketdata_pb2.GetCandlesRequest(
             instrument_id=request.instrument_id,
             to=request.to,
@@ -25,12 +26,16 @@ class MarketDataClient(BaseClient):
         setattr(invest_api_request, "from", request.from_)
 
         response = await self.stub.GetCandles(invest_api_request, metadata=self.get_metadata())
-        return [(
-            BaseClient._quotation_to_float(candle.open),
-            BaseClient._quotation_to_float(candle.high),
-            BaseClient._quotation_to_float(candle.low),
-            BaseClient._quotation_to_float(candle.close),
-            candle.time.ToDatetime()) for candle in response.candles]
+
+        return [CandleModel(
+            open=BaseClient._quotation_to_float(candle.open),
+            high=BaseClient._quotation_to_float(candle.high),
+            low=BaseClient._quotation_to_float(candle.low),
+            close=BaseClient._quotation_to_float(candle.close),
+            timestamp=candle.time.ToDatetime(),
+            volume=candle.volume
+        )
+            for candle in response.candles]
 
     async def get_instrument_stat(self, request: GetInstrumentStatRequestModel.GetInstrumentStatRequestModel) -> float | None:
         if request.stat_type == InstrumentStatType.Unknown: return None

@@ -22,7 +22,7 @@ class IModelRepository(ABC):
     async def get_model(
             self,
             model_id: int,
-            model_for_init: torch.nn.Module
+            model_for_init: torch.nn.Module | None = None
     ) -> GetModelResponse | None:
         pass
 

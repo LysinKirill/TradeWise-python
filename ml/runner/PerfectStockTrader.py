@@ -5,11 +5,10 @@ import numpy as np
 import torch
 import asyncio
 import traceback
+from app.domain.models.invest.CandleModel import CandleModel
 from ml.data.interface.IBroker import IBroker
-
 from ml.data.interface.ICandleGenerator import ICandleGenerator
 from ml.data.interface.ITradingWindowManager import ITradingWindowManager
-from ml.data.model.Candle import Candle
 from ml.data.model.OperationType import OperationType
 from ml.dataAugmentation.Normalizer import Normalizer
 from ml.oneMinute.LSTM.StockPriceLstm import StockPriceLstm
@@ -81,7 +80,7 @@ class PerfectStockTrader:
             )
 
 
-    async def trading_cycle(self, current_candle: Candle, next_candle: Candle):
+    async def trading_cycle(self, current_candle: CandleModel, next_candle: CandleModel):
         """Perform one trading decision cycle"""
         #self.logger.info(f"Trading cycle started. Timestamp = {datetime.now()}")
         try:

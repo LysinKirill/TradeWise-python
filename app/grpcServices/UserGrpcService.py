@@ -1,4 +1,5 @@
-from app.debug.ExceptionLogger import exception_handler
+from app.debug.ExceptionHandler import exception_handler
+from app.domain.exceptions.user.NoAccountsExistException import NoAccountsExistException
 from app.domain.models.user.requests.AddInvestApiKeyRequestModel import AddInvestApiKeyRequestModel
 from app.domain.models.user.requests.GetAccountsRequestModel import GetAccountsRequestModel
 from app.domain.models.user.AccountStatusModel import AccountStatusModel
@@ -8,6 +9,7 @@ from app.proto import user_pb2, user_pb2_grpc
 from google.protobuf import empty_pb2
 import app.domain.services.IUserService as IUserService
 import app.domain.services.IClaimValuesService as IClaimValuesService
+import grpc
 
 
 class UserGrpcService(user_pb2_grpc.UserServiceServicer):
@@ -37,7 +39,11 @@ class UserGrpcService(user_pb2_grpc.UserServiceServicer):
     async def AddInvestApiKey(self, request, context):
         email = await self.claim_values_service.get_email()
         request_model = AddInvestApiKeyRequestModel(api_key=request.api_key, email=email)
-        await self.user_service.add_invest_api_key(request_model)
+        try:
+            await self.user_service.add_invest_api_key(request_model)
+        except NoAccountsExistException:
+            # Do not specify explicit reason of failure for security reasons
+            await context.abort(grpc.StatusCode.INVALID_ARGUMENT, 'Invalid API key provided.')
         return empty_pb2.Empty()
 
     @exception_handler

@@ -22,10 +22,13 @@ from app.proto import (
 
 from app.grpcServices.UserGrpcService import UserGrpcService
 from app.services.InvestService import InvestService
+from app.services.ModelExecutionService import ModelExecutionService
 from app.services.ModelService import ModelService
 from app.services.UserService import UserService
 from app.services.ClaimValuesService import ClaimValuesService
 from app.infrastructure.GrpcContextAccessor import GrpcContextAccessor
+from app.workers.ModelExecutionWorker import ModelExecutionWorker
+from dataAccess.ExecutionRepository import ExecutionRepository
 from dataAccess.LocalModelRepository import LocalModelRepository
 from dataAccess.UserRepository import UserRepository
 from dataAccess.PgModelRepository import PgModelRepository
@@ -34,6 +37,13 @@ from externalClients.TInvestApi.handlers.MarketDataClient import MarketDataClien
 from externalClients.TInvestApi.handlers.InstrumentsClient import InstrumentsClient
 from externalClients.TInvestApi.handlers.OperationsClient import OperationClient
 from externalClients.TInvestApi.handlers.UserClient import UserClient
+from ml.data.ApiBroker import ApiBroker
+from ml.data.ApiCandleGenerator import ApiCandleGenerator
+from ml.data.ConstantTradingWindowManager import ConstantTradingWindowManager
+from ml.data.PresetTradingWindowManager import PresetTradingWindowManager
+from ml.data.RetryPolicy import RetryPolicy
+from ml.data.configuration.BackoffStrategy import BackoffStrategy
+from ml.data.configuration.RetryPolicyConfiguration import RetryPolicyConfiguration
 
 logging.basicConfig(
     level=logging.INFO,
@@ -43,6 +53,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+SECONDS_IN_MINUTE = 60
 GRACE_PERIOD_IN_SECOND = 15
 SERVER_PORT = 50051
 
@@ -59,6 +70,12 @@ class Container(containers.DeclarativeContainer):
     supported_instruments_options = providers.Factory(
         SupportedInstrumentsOptions.SupportedInstrumentsOptions,
         settings = settings
+    )
+
+    retry_policy_configuration = RetryPolicyConfiguration(
+        initial_delay_in_seconds=5,
+        allowed_attempts=3,
+        backoff_strategy=BackoffStrategy.Linear
     )
 
     t_api_token = config.INVEST_TOKEN
@@ -94,6 +111,11 @@ class Container(containers.DeclarativeContainer):
     fallback_model_repository = providers.Factory(
         LocalModelRepository,
         base_dir="./ml/savedModels"
+    )
+
+    execution_repository = providers.Factory(
+        ExecutionRepository,
+        connection_provider=pg_connection_provider
     )
 
     user_client = providers.Singleton(
@@ -133,6 +155,35 @@ class Container(containers.DeclarativeContainer):
         model_repository=model_repository,
         fallback_model_repository=fallback_model_repository,
     )
+    candle_generator_factory = providers.Singleton(
+        ApiCandleGenerator,
+        marketdata_client=marketdata_client,
+        fetch_delay_in_seconds=SECONDS_IN_MINUTE,
+        retry_policy=RetryPolicy(retry_policy_configuration)
+    )
+    broker = providers.Singleton(
+        ApiBroker
+    )
+
+    # trading_window_manager = PresetTradingWindowManager(
+    #     trading_windows=[(time(hour=7, minute=0, second=0, microsecond=0),
+    #                       time(hour=16, minute=50, second=0, microsecond=0))],
+    # )
+
+    trading_window_manager = providers.Singleton(
+        ConstantTradingWindowManager,
+        constant_trading_flag=True
+    )
+
+    model_execution_service = providers.Factory(
+        ModelExecutionService,
+        model_repository=model_repository,
+        execution_repository=execution_repository,
+        user_service=user_service,
+        candle_generator_factory=candle_generator_factory,
+        broker=broker,
+        trading_window_manager=trading_window_manager,
+    )
     user_grpc_service = providers.Factory(
         UserGrpcService,
         user_service=user_service,
@@ -146,10 +197,17 @@ class Container(containers.DeclarativeContainer):
     model_grpc_service = providers.Factory(
         ModelGrpcService,
         model_service=model_service,
+        model_execution_service=model_execution_service,
         claim_values_service=claim_values_service
     )
     backtest_grpc_service = providers.Factory(
         BacktestGrpcService
+    )
+
+    model_execution_worker = providers.Factory(
+        ModelExecutionWorker,
+        execution_service=model_execution_service,
+        interval_seconds=60
     )
 
 
@@ -198,11 +256,16 @@ async def serve():
     await server.start()
     logger.info("Server is running...")
 
+    worker = container.model_execution_worker()
+    worker_task = asyncio.create_task(worker.start())
+
     try:
         while True:
             await asyncio.sleep(1)
     except (asyncio.CancelledError, KeyboardInterrupt):
         logger.info("Shutdown signal received. Gracefully stopping server...")
+        await worker.stop()
+        await worker_task
         await server.stop(GRACE_PERIOD_IN_SECOND)
 
 

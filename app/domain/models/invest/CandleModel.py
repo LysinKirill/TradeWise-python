@@ -8,4 +8,5 @@ class CandleModel:
     high: float
     low: float
     close: float
+    volume: int
     timestamp: datetime

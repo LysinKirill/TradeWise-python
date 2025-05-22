@@ -1,10 +1,9 @@
 import asyncio
 from collections.abc import AsyncGenerator
 from datetime import datetime
-
+from app.domain.models.invest.CandleModel import CandleModel
 from ml.TInvestDataProvider import TInvestDataProvider
 from ml.data.interface.ICandleGenerator import ICandleGenerator
-from ml.data.model.Candle import Candle
 
 
 class HistoryCandleGenerator(ICandleGenerator):
@@ -31,7 +30,7 @@ class HistoryCandleGenerator(ICandleGenerator):
             instrument_id=self.instrument_id
         )
         await provider.close()
-        self.candle_data = [Candle(
+        self.candle_data = [CandleModel(
             open=x.open,
             close=x.close,
             high=x.high,
@@ -46,7 +45,7 @@ class HistoryCandleGenerator(ICandleGenerator):
         instrument_id: str,
         preload_candles_count: int = 0,
         stop_event: asyncio.Event | None = None
-    ) -> AsyncGenerator[Candle | None, None]:
+    ) -> AsyncGenerator[CandleModel | None, None]:
         #await self.load_data()
         for candle in self.candle_data:
             yield candle

@@ -1,3 +1,4 @@
+import json
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -12,3 +13,12 @@ class FullModelInfo:
     model_configuration: dataclass
     normalizer_mins: list[float]
     normalizer_maxs: list[float]
+
+
+    @classmethod
+    def from_json(cls, json_str: str):
+        if json_str is None:
+            return None
+        config_dict = json.loads(json_str)
+        return cls(**config_dict)
+

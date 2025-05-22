@@ -1,5 +1,4 @@
 from pydapper.commands import CommandsAsync
-
 from migrations.infrastructure.MigrationAttribute import *
 
 

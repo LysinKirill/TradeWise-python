@@ -1,6 +1,6 @@
 import grpc
 
-from app.debug.ExceptionLogger import exception_handler
+from app.debug.ExceptionHandler import exception_handler
 from app.domain.models.invest import InstrumentModel
 from app.domain.models.invest.InstrumentStatType import InstrumentStatType
 from app.domain.models.invest.requests.GetCandlesRequestModel import GetCandlesRequestModel

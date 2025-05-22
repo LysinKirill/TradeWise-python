@@ -102,7 +102,7 @@ class StockTrader:
             )
 
 
-    NANO_CONVERSION_FACTOR = 10e-9
+    NANO_CONVERSION_FACTOR = 1e-9
     @staticmethod
     def quotation_to_float(quotation: common_pb2.Quotation) -> float:
         return quotation.units + quotation.nano * StockTrader.NANO_CONVERSION_FACTOR
