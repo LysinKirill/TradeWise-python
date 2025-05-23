@@ -29,7 +29,6 @@ from app.services.ClaimValuesService import ClaimValuesService
 from app.infrastructure.GrpcContextAccessor import GrpcContextAccessor
 from app.workers.ModelExecutionWorker import ModelExecutionWorker
 from dataAccess.ExecutionRepository import ExecutionRepository
-from dataAccess.LocalModelRepository import LocalModelRepository
 from dataAccess.UserRepository import UserRepository
 from dataAccess.PgModelRepository import PgModelRepository
 from dataAccess.PgConnectionProvider import PgConnectionProvider
@@ -40,7 +39,6 @@ from externalClients.TInvestApi.handlers.UserClient import UserClient
 from ml.data.ApiBroker import ApiBroker
 from ml.data.ApiCandleGenerator import ApiCandleGenerator
 from ml.data.ConstantTradingWindowManager import ConstantTradingWindowManager
-from ml.data.PresetTradingWindowManager import PresetTradingWindowManager
 from ml.data.RetryPolicy import RetryPolicy
 from ml.data.configuration.BackoffStrategy import BackoffStrategy
 from ml.data.configuration.RetryPolicyConfiguration import RetryPolicyConfiguration
@@ -108,11 +106,6 @@ class Container(containers.DeclarativeContainer):
         connection_provider=pg_connection_provider
     )
 
-    fallback_model_repository = providers.Factory(
-        LocalModelRepository,
-        base_dir="./ml/savedModels"
-    )
-
     execution_repository = providers.Factory(
         ExecutionRepository,
         connection_provider=pg_connection_provider
@@ -153,7 +146,6 @@ class Container(containers.DeclarativeContainer):
     model_service = providers.Factory(
         ModelService,
         model_repository=model_repository,
-        fallback_model_repository=fallback_model_repository,
     )
     candle_generator_factory = providers.Singleton(
         ApiCandleGenerator,
