@@ -25,7 +25,7 @@ class UserRepository(IUserRepository):
     async def get_user_by_email(self, email: str) -> UserInfo | None:
         async with (self.connection_provider.get_connection() as commands):
             commands: CommandsAsync
-            return await commands.query_first_or_default_async(
+            record = await commands.query_first_or_default_async(
                 '''
                 SELECT 
                     u.id,
@@ -37,4 +37,14 @@ class UserRepository(IUserRepository):
                 ''',
                 param={"email": email},
                 default=None
+            )
+
+            if record is None:
+                return None
+
+            return UserInfo(
+                id=record['id'],
+                email=record['email'],
+                invest_api_key=record['invest_api_key'],
+                invest_account_id=record['invest_account_id']
             )
