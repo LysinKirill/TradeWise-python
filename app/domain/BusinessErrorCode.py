@@ -6,3 +6,4 @@ class BusinessErrorCode(Enum):
     ModelNotFound = 1
     ExecutionNotFound = 2
     InvalidExecutionStateTransition = 3
+    UserNotFound = 4

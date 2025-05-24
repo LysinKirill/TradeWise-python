@@ -171,6 +171,7 @@ class Container(containers.DeclarativeContainer):
         ModelExecutionService,
         model_repository=model_repository,
         execution_repository=execution_repository,
+        user_repository=user_repository,
         user_service=user_service,
         candle_generator_factory=candle_generator_factory,
         broker=broker,

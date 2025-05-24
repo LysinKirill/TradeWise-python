@@ -12,7 +12,7 @@ class ExecutionRepository(IExecutionRepository):
 
     async def create_execution(
             self,
-            user_email: str,
+            user_id: int,
             model_id: int,
             allocated_amount: float,
             deadline: datetime | None = None
@@ -22,39 +22,29 @@ class ExecutionRepository(IExecutionRepository):
 
             execution_id_dict = await commands.query_first_or_default_async(
                 '''
-                WITH user_lookup AS (
-                    SELECT id FROM users 
-                    WHERE email = ?email?
-                    LIMIT 1
-                )
-                INSERT INTO model_executions (
-                    user_id,
-                    model_id,
-                    status,
-                    deadline,
-                    max_budget
-                )
-                SELECT 
-                    ul.id,
+                INSERT INTO model_executions (user_id, model_id, status, max_budget, deadline)
+                VALUES
+                (
+                    ?user_id?,
                     ?model_id?,
                     ?status?,
-                    ?deadline?,
-                    ?budget?
-                FROM user_lookup ul
+                    ?max_budget?,
+                    ?deadline?
+                )
                 RETURNING id;
                 ''',
                 param={
-                    "email": user_email,
+                    "user_id": user_id,
                     "model_id": model_id,
                     "status": ExecutionStatus.PENDING.value,
                     "deadline": deadline,
-                    "budget": allocated_amount,
+                    "max_budget": allocated_amount,
                 },
                 default=None
             )
 
-            if not (execution_id := execution_id_dict['id']):
-                raise ValueError(f"Failed to create execution - user with email {user_email} not found")
+            if not execution_id_dict or not (execution_id := execution_id_dict['id']):
+                raise ValueError(f"Failed to create execution")
 
             return execution_id
 

@@ -8,6 +8,7 @@ import torch
 from app.domain.exceptions.execution.ExecutionNotFoundException import ExecutionNotFoundException
 from app.domain.exceptions.execution.InvalidStateTransitionException import InvalidStateTransitionException
 from app.domain.exceptions.model.ModelNotFoundException import ModelNotFoundException
+from app.domain.exceptions.user.UserNotFoundException import UserNotFoundException
 from app.domain.models.execution.ExecutionModel import ExecutionModel
 from app.domain.models.execution.ExecutionStatusModel import ExecutionStatusModel
 from app.domain.models.execution.requests.CreateExecutionRequestModel import CreateExecutionRequestModel
@@ -19,6 +20,7 @@ from app.domain.services.IModelExecutionService import IModelExecutionService
 from app.domain.services.IUserService import IUserService
 from dataAccess.interfaces.IExecutionRepository import IExecutionRepository
 from dataAccess.interfaces.IModelRepository import IModelRepository
+from dataAccess.interfaces.IUserRepository import IUserRepository
 from dataAccess.models.common.ModelInfo import ModelInfo
 from dataAccess.models.common.UserInfo import UserInfo
 from dataAccess.models.execution.ExecutionRecord import ExecutionRecord
@@ -42,6 +44,7 @@ class ModelExecutionService(IModelExecutionService):
             self,
             model_repository: IModelRepository,
             execution_repository: IExecutionRepository,
+            user_repository: IUserRepository,
             user_service: IUserService,
             candle_generator_factory: ICandleGenerator,
             broker: IBroker,
@@ -51,6 +54,7 @@ class ModelExecutionService(IModelExecutionService):
         self.user_service = user_service
         self.model_repository = model_repository
         self.execution_repository = execution_repository
+        self.user_repository = user_repository
         self.candle_generator_factory = candle_generator_factory
         self.broker = broker
         self.trading_window_manager = trading_window_manager
@@ -86,8 +90,12 @@ class ModelExecutionService(IModelExecutionService):
         if model is None:
             raise ModelNotFoundException(request.model_id, model_source="PostgreSQL model table")
 
+        user = await self.user_repository.get_user_by_email(request.user_email)
+        if user is None:
+            raise UserNotFoundException(user_email=request.user_email, source="PostgreSQL user table")
+
         execution_id = await self.execution_repository.create_execution(
-            user_email=request.user_email,
+            user_id=user.id,
             model_id=request.model_id,
             deadline=deadline,
             allocated_amount=request.allocated_balance
