@@ -164,7 +164,7 @@ class ModelExecutionService(IModelExecutionService):
 
                 if (
                         len(self.candle_data[instrument_id][1]) == 0 or
-                        (datetime.now(timezone.utc) - self.candle_data[instrument_id][0]).seconds >= ModelExecutionService.REFRESH_INTERVAL_SECONDS
+                        (datetime.now(timezone.utc) - self.candle_data[instrument_id][0]).total_seconds() >= ModelExecutionService.REFRESH_INTERVAL_SECONDS
                 ):
                     candle = await anext(self.candle_generators[instrument_id])
                     if not candle:

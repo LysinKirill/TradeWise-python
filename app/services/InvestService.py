@@ -1,5 +1,5 @@
 from app.configuration.SupportedInstrumentsOptions import SupportedInstrumentsOptions
-from app.domain.models.invest.CandleModel import CandleModel
+from app.domain.exceptions.invest.AllowedTimeIntervalExceeded import AllowedTimeIntervalExceeded
 from app.domain.models.invest.InstrumentModel import InstrumentModel
 from app.domain.models.invest.requests.GetCandlesRequestModel import GetCandlesRequestModel
 from app.domain.models.invest.requests.GetInstrumentStatRequestModel import GetInstrumentStatRequestModel
@@ -23,6 +23,8 @@ class InvestService(IInvestService):
         self.supported_instruments_options = supported_instruments_options
         self.marketdata_client = marketdata_client
 
+    MAX_ALLOWED_INTERVAL_FOR_ONE_MINUTE_CANDLE_IN_HOURS = 40
+
     async def get_supported_instruments(self) -> GetSupportedInstrumentsResponseModel:
         supported_instruments_ids = self.supported_instruments_options.shares
         client_response_instruments = await self.instruments_client.get_instruments(supported_instruments_ids)
@@ -35,15 +37,15 @@ class InvestService(IInvestService):
         return GetInstrumentStatResponseModel(stat_value=client_response_stat)
 
     async def get_candles(self, request: GetCandlesRequestModel) -> GetCandlesResponseModel:
+        max_allowed_seconds = InvestService.MAX_ALLOWED_INTERVAL_FOR_ONE_MINUTE_CANDLE_IN_HOURS * 3600
+        request_interval_seconds = int((request.to - request.from_).total_seconds())
+
+        if  request_interval_seconds > max_allowed_seconds:
+            raise AllowedTimeIntervalExceeded(max_allowed_seconds, request_interval_seconds)
+
         client_response = await self.marketdata_client.get_candles(request)
         return GetCandlesResponseModel(
-            candles=list(map(lambda x: CandleModel(
-                open=x[0],
-                high=x[1],
-                low=x[2],
-                close=x[3],
-                timestamp=x[4]
-            ), client_response))
+            candles=client_response
         )
 
     @staticmethod
