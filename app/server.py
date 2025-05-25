@@ -21,6 +21,7 @@ from app.proto import (
 )
 
 from app.grpcServices.UserGrpcService import UserGrpcService
+from app.services.BacktestService import BacktestService
 from app.services.InvestService import InvestService
 from app.services.ModelExecutionService import ModelExecutionService
 from app.services.ModelService import ModelService
@@ -179,6 +180,13 @@ class Container(containers.DeclarativeContainer):
         broker=broker,
         trading_window_manager=trading_window_manager,
     )
+
+    backtest_service = providers.Factory(
+        BacktestService,
+        backtest_repository=backtest_repository,
+        user_repository=user_repository,
+        model_repository=model_repository,
+    )
     user_grpc_service = providers.Factory(
         UserGrpcService,
         user_service=user_service,
@@ -196,7 +204,9 @@ class Container(containers.DeclarativeContainer):
         claim_values_service=claim_values_service
     )
     backtest_grpc_service = providers.Factory(
-        BacktestGrpcService
+        BacktestGrpcService,
+        claim_values_service=claim_values_service,
+        backtest_service=backtest_service
     )
 
     model_execution_worker = providers.Factory(

@@ -12,7 +12,7 @@ class BacktestRepository(IBacktestRepository):
 
     async def create_backtest(
             self,
-            user_id: str,
+            user_id: int,
             model_id: int,
             allocated_amount: float,
             from_: datetime,
