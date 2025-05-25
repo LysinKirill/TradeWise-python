@@ -1,3 +1,4 @@
+from app.domain.exceptions.backtest.BacktestAlreadyQueuedException import BacktestAlreadyQueuedException
 from app.domain.exceptions.backtest.BacktestNotFoundException import BacktestNotFoundException
 from app.domain.exceptions.model.ModelNotFoundException import ModelNotFoundException
 from app.domain.exceptions.user.UserNotFoundException import UserNotFoundException
@@ -35,6 +36,21 @@ class BacktestService(IBacktestService):
         model = await self.model_repository.get_model(request.model_id)
         if model is None:
             raise ModelNotFoundException(request.model_id, model_source="PostgreSQL model table")
+
+        user_backtests = await self.backtest_repository.get_user_backtests(user_id=user.id)
+        already_queued_backtest_ids = list(
+            map(
+                lambda backtest: backtest.id,
+                filter(
+                    lambda backtest: backtest.status == BacktestStatus.PENDING or
+                                     backtest.status == BacktestStatus.RUNNING,
+                    user_backtests
+                )
+            )
+        )
+
+        if already_queued_backtest_ids:
+            raise BacktestAlreadyQueuedException(user_id=user.id, backtest_ids=already_queued_backtest_ids)
 
         backtest_id = await self.backtest_repository.create_backtest(
             user_id=user.id,

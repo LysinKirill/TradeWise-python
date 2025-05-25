@@ -8,3 +8,4 @@ class BusinessErrorCode(Enum):
     InvalidExecutionStateTransition = 3
     UserNotFound = 4
     BacktestNotFound = 5
+    BacktestAlreadyQueued = 6

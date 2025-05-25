@@ -88,6 +88,7 @@ class BacktestRepository(IBacktestRepository):
                 JOIN users u ON b.user_id = u.id
                 JOIN models m ON b.model_id = m.id
                 WHERE b.id = ?backtest_id?
+                LIMIT 1;
                 ''',
                 param={"backtest_id": backtest_id},
                 model=BacktestRecord.from_query_row,
@@ -95,6 +96,44 @@ class BacktestRepository(IBacktestRepository):
             )
 
             return backtest
+
+    async def get_user_backtests(self, user_id: int) -> list[BacktestRecord]:
+        async with self.connection_provider.get_connection() as commands:
+            commands: CommandsAsync
+
+            backtests = await commands.query_async(
+                '''
+                SELECT
+                    b.id,
+                    b.started_at,
+                    b.finished_at,
+                    b.test_period_start,
+                    b.test_period_end,
+                    b.status,
+                    b.profit,
+                    b.trades_count,
+                    b.initial_balance,
+                    b.final_balance,
+                    b.created_at,
+                    u.id as user_id,
+                    u.email,
+                    u.invest_api_key,
+                    u.invest_account_id,
+                    m.id as model_id,
+                    m.instrument_id,
+                    m."name" as model_name,
+                    m.type as model_type,
+                    m.created_at as model_created_at
+                FROM backtests b
+                JOIN users u ON b.user_id = u.id
+                JOIN models m ON b.model_id = m.id
+                WHERE b.user_id = ?user_id?
+                ''',
+                param={"user_id": user_id},
+                model=BacktestRecord.from_query_row
+            )
+
+            return backtests
 
     async def update_backtest_status(
             self,

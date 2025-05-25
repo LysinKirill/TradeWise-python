@@ -21,6 +21,10 @@ class IBacktestRepository(ABC):
         pass
 
     @abstractmethod
+    async def get_user_backtests(self, user_id: int) -> list[BacktestRecord]:
+        pass
+
+    @abstractmethod
     async def update_backtest_status(
         self,
         backtest_id: int,
