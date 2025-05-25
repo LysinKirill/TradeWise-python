@@ -7,7 +7,7 @@ class _20250510_2000_create_executions_table(ForwardMigration):
     async def migrate_up(self, commands: CommandsAsync) -> None:
         await commands.execute_async(
             sql='''
-            CREATE TABLE model_executions (
+            CREATE TABLE IF NOT EXISTS model_executions (
                 id SERIAL PRIMARY KEY,
                 user_id INTEGER NOT NULL REFERENCES users(id),
                 model_id INTEGER NOT NULL REFERENCES models(id),
