@@ -11,7 +11,7 @@ class BacktestRecord:
     user_info: UserInfo
     model_info: ShortModelInfo
     started_at: datetime | None
-    ended_at: datetime | None
+    finished_at: datetime | None
     test_period_start: datetime | None
     test_period_end: datetime | None
     status: BacktestStatus
@@ -35,7 +35,7 @@ class BacktestRecord:
             model_type: str,
             model_created_at: datetime,
             started_at: datetime | None,
-            ended_at: datetime | None,
+            finished_at: datetime | None,
             test_period_start: datetime,
             test_period_end: datetime,
             status: str,
@@ -61,7 +61,7 @@ class BacktestRecord:
                 created_at=model_created_at,
             ),
             started_at=started_at,
-            ended_at=ended_at,
+            finished_at=finished_at,
             test_period_start=test_period_start,
             test_period_end=test_period_end,
             status=BacktestStatus(status),

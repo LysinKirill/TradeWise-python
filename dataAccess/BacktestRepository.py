@@ -90,7 +90,7 @@ class BacktestRepository(IBacktestRepository):
                 WHERE b.id = ?backtest_id?
                 ''',
                 param={"backtest_id": backtest_id},
-                model=BacktestRecord,
+                model=BacktestRecord.from_query_row,
                 default=None
             )
 
