@@ -9,18 +9,11 @@ service BacktestService {
   rpc GetBacktestStatus(GetBacktestStatusRequest) returns (GetBacktestStatusResponse) {}
 }
 
-enum ExecutionFinishedBehaviour {
-  ExecutionFinishedBehaviour_Unknown = 0;
-  ExecutionFinishedBehaviour_Sell = 1;
-  ExecutionFinishedBehaviour_Hold = 2;
-}
-
 message StartBacktestRequest {
   int64 model_id = 1;
   google.protobuf.Timestamp from_ = 2;
   google.protobuf.Timestamp to = 3;
   double initial_balance = 4;
-  ExecutionFinishedBehaviour execution_finished_behaviour = 5;
 }
 
 message StartBacktestResponse {
@@ -29,7 +22,10 @@ message StartBacktestResponse {
 
 enum BacktestStatus {
   BacktestStatus_Unknown = 0;
-  BacktestStatus_Running = 1;
+  BacktestStatus_Pending = 1;
+  BacktestStatus_Running = 2;
+  BacktestStatus_Completed = 3;
+  BacktestStatus_Failed = 4;
 }
 
 message GetBacktestStatusResponse {
