@@ -28,6 +28,7 @@ from app.services.UserService import UserService
 from app.services.ClaimValuesService import ClaimValuesService
 from app.infrastructure.GrpcContextAccessor import GrpcContextAccessor
 from app.workers.ModelExecutionWorker import ModelExecutionWorker
+from dataAccess.BacktestRepository import BacktestRepository
 from dataAccess.ExecutionRepository import ExecutionRepository
 from dataAccess.UserRepository import UserRepository
 from dataAccess.PgModelRepository import PgModelRepository
@@ -111,6 +112,11 @@ class Container(containers.DeclarativeContainer):
         connection_provider=pg_connection_provider
     )
 
+    backtest_repository = providers.Factory(
+        BacktestRepository,
+        connection_provider=pg_connection_provider
+    )
+
     user_client = providers.Singleton(
         UserClient,
         endpoint=t_api_endpoint,
@@ -157,11 +163,7 @@ class Container(containers.DeclarativeContainer):
         ApiBroker
     )
 
-    # trading_window_manager = PresetTradingWindowManager(
-    #     trading_windows=[(time(hour=7, minute=0, second=0, microsecond=0),
-    #                       time(hour=16, minute=50, second=0, microsecond=0))],
-    # )
-
+    # TODO: replace with proper trading window manager
     trading_window_manager = providers.Singleton(
         ConstantTradingWindowManager,
         constant_trading_flag=True
