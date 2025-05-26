@@ -64,7 +64,7 @@ class BacktestGrpcService(backtest_pb2_grpc.BacktestServiceServicer):
     @request_response_logging()
     @jwt_authorization
     async def GetAllUserBacktests(self, request, context):
-        backtests = await self.backtest_service.get_backtest_for_user()
+        backtests = await self.backtest_service.get_backtests_for_user()
         return backtest_pb2.GetAllUserBacktestsResponse(
             backtests=list(map(BacktestGrpcService._get_grpc_backtest, backtests))
         )
