@@ -3,6 +3,7 @@ from datetime import time, timezone, datetime
 from app.domain.exceptions.backtest.BacktestAlreadyQueuedException import BacktestAlreadyQueuedException
 from app.domain.exceptions.backtest.BacktestNotFoundException import BacktestNotFoundException
 from app.domain.exceptions.backtest.BacktestResult import BacktestResult
+from app.domain.exceptions.backtest.InvalidStateTransitionException import InvalidStateTransitionException
 from app.domain.exceptions.model.ModelNotFoundException import ModelNotFoundException
 from app.domain.exceptions.user.UserNotFoundException import UserNotFoundException
 from app.domain.models.backtest.BacktestModel import BacktestModel
@@ -178,6 +179,12 @@ class BacktestService(IBacktestService):
         if db_backtest is None:
             raise BacktestNotFoundException(backtest_id, backtest_source="PostgreSQL backtest table")
 
+        source_status =BacktestService._get_domain_backtest_status(db_backtest.status)
+        is_source_final = BacktestService._is_final_status(source_status)
+
+        if is_source_final and source_status != status:
+            raise InvalidStateTransitionException(source_status, status)
+
         started_at = datetime.now(timezone.utc) if (
                 db_backtest.status == BacktestStatus.PENDING and
                 status == BacktestStatusModel.RUNNING
@@ -194,6 +201,12 @@ class BacktestService(IBacktestService):
             started_at=started_at,
             finished_at=finished_at
         )
+
+    @staticmethod
+    def _is_final_status(status: BacktestStatusModel) -> bool:
+        return (status == BacktestStatus.COMPLETED or
+                status == BacktestStatus.FAILED or
+                status == BacktestStatus.CANCELLED)
 
     @staticmethod
     def _get_domain_backtest(db_backtest: BacktestRecord) -> BacktestModel:
@@ -220,6 +233,7 @@ class BacktestService(IBacktestService):
             case BacktestStatus.FAILED: return BacktestStatusModel.FAILED
             case BacktestStatus.RUNNING: return BacktestStatusModel.RUNNING
             case BacktestStatus.COMPLETED: return BacktestStatusModel.COMPLETED
+            case BacktestStatus.CANCELLED: return BacktestStatusModel.CANCELLED
         return BacktestStatusModel.UNKNOWN
 
     @staticmethod
@@ -229,6 +243,7 @@ class BacktestService(IBacktestService):
             case BacktestStatusModel.FAILED: return BacktestStatus.FAILED
             case BacktestStatusModel.RUNNING: return BacktestStatus.RUNNING
             case BacktestStatusModel.COMPLETED: return BacktestStatus.COMPLETED
+            case BacktestStatusModel.CANCELLED: return BacktestStatus.CANCELLED
         raise ValueError(f"Unknown backtest status for db: {domain_backtest_status}")
 
     @staticmethod
