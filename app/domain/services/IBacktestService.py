@@ -3,6 +3,7 @@ from app.domain.models.backtest.BacktestModel import BacktestModel
 from app.domain.models.backtest.BacktestStatusModel import BacktestStatusModel
 from app.domain.models.backtest.requests.EnqueueBacktestRequestModel import EnqueueBacktestRequestModel
 from app.domain.models.backtest.responses.EnqueueBacktestResponseModel import EnqueueBacktestResponseModel
+from app.domain.models.backtest.responses.GetBacktestForUserResponseModel import GetBacktestForUserResponseModel
 
 
 class IBacktestService(ABC):
@@ -32,4 +33,8 @@ class IBacktestService(ABC):
 
     @abstractmethod
     async def update_backtest_status(self, backtest_id: int, status: BacktestStatusModel) -> None:
+        pass
+
+    @abstractmethod
+    async def get_backtests_for_user(self) -> GetBacktestForUserResponseModel:
         pass
