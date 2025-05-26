@@ -18,6 +18,7 @@ from app.domain.models.user.UserInfoModel import UserInfoModel
 from app.domain.models.invest.CandleModel import CandleModel
 from app.domain.services.IModelExecutionService import IModelExecutionService
 from app.domain.services.IUserService import IUserService
+from app.mappers.domain_dal.CommonMapper import CommonMapper
 from dataAccess.interfaces.IExecutionRepository import IExecutionRepository
 from dataAccess.interfaces.IModelRepository import IModelRepository
 from dataAccess.interfaces.IUserRepository import IUserRepository
@@ -391,7 +392,7 @@ class ModelExecutionService(IModelExecutionService):
     def _get_domain_execution(db_execution: ExecutionRecord) -> ExecutionModel:
         return ExecutionModel(
             id=db_execution.id,
-            user_info=ModelExecutionService._get_domain_user(db_execution.user_info),
+            user_info=CommonMapper.get_domain_user(db_execution.user_info),
             model_info=ModelExecutionService._get_domain_model(db_execution.model_info),
             status=ModelExecutionService._get_domain_status(db_execution.status),
             started_at=db_execution.started_at,

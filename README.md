@@ -69,7 +69,7 @@ Ensure you have the following installed on your system:
     python3 -m grpc_tools.protoc -I=app/proto --python_out=app/proto --grpc_python_out=app/proto app/proto/*.proto
    ```
    ```bash
-    python -m postProcessing.Processor
+    python3 -m postProcessing.Processor
    ```
 
 6. Set up your `.env` file (for **debug purposes only**):

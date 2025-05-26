@@ -56,6 +56,9 @@ def _business_error_code_to_grpc(code: BusinessErrorCode):
         case BusinessErrorCode.ModelNotFound: return grpc.StatusCode.NOT_FOUND
         case BusinessErrorCode.ExecutionNotFound: return grpc.StatusCode.NOT_FOUND
         case BusinessErrorCode.UserNotFound: return grpc.StatusCode.NOT_FOUND
+        case BusinessErrorCode.BacktestNotFound: return grpc.StatusCode.NOT_FOUND
         case BusinessErrorCode.InvalidExecutionStateTransition: return grpc.StatusCode.INVALID_ARGUMENT
+        case BusinessErrorCode.InvalidBacktestStateTransition: return grpc.StatusCode.INVALID_ARGUMENT
+        case BusinessErrorCode.BacktestAlreadyQueued: return grpc.StatusCode.INVALID_ARGUMENT
 
     return grpc.StatusCode.UNKNOWN

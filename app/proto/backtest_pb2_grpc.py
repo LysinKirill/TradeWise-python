@@ -4,8 +4,9 @@ import grpc
 import warnings
 
 from app.proto import backtest_pb2 as backtest__pb2
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
-GRPC_GENERATED_VERSION = '1.69.0'
+GRPC_GENERATED_VERSION = '1.71.0'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -44,6 +45,16 @@ class BacktestServiceStub(object):
                 request_serializer=backtest__pb2.GetBacktestStatusRequest.SerializeToString,
                 response_deserializer=backtest__pb2.GetBacktestStatusResponse.FromString,
                 _registered_method=True)
+        self.GetBacktest = channel.unary_unary(
+                '/backtest.BacktestService/GetBacktest',
+                request_serializer=backtest__pb2.GetBacktestRequest.SerializeToString,
+                response_deserializer=backtest__pb2.BacktestInfo.FromString,
+                _registered_method=True)
+        self.CancelBacktest = channel.unary_unary(
+                '/backtest.BacktestService/CancelBacktest',
+                request_serializer=backtest__pb2.CancelBacktestRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
 
 
 class BacktestServiceServicer(object):
@@ -61,6 +72,18 @@ class BacktestServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetBacktest(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CancelBacktest(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_BacktestServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -73,6 +96,16 @@ def add_BacktestServiceServicer_to_server(servicer, server):
                     servicer.GetBacktestStatus,
                     request_deserializer=backtest__pb2.GetBacktestStatusRequest.FromString,
                     response_serializer=backtest__pb2.GetBacktestStatusResponse.SerializeToString,
+            ),
+            'GetBacktest': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetBacktest,
+                    request_deserializer=backtest__pb2.GetBacktestRequest.FromString,
+                    response_serializer=backtest__pb2.BacktestInfo.SerializeToString,
+            ),
+            'CancelBacktest': grpc.unary_unary_rpc_method_handler(
+                    servicer.CancelBacktest,
+                    request_deserializer=backtest__pb2.CancelBacktestRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -129,6 +162,60 @@ class BacktestService(object):
             '/backtest.BacktestService/GetBacktestStatus',
             backtest__pb2.GetBacktestStatusRequest.SerializeToString,
             backtest__pb2.GetBacktestStatusResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetBacktest(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/backtest.BacktestService/GetBacktest',
+            backtest__pb2.GetBacktestRequest.SerializeToString,
+            backtest__pb2.BacktestInfo.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def CancelBacktest(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/backtest.BacktestService/CancelBacktest',
+            backtest__pb2.CancelBacktestRequest.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
             channel_credentials,
             insecure,

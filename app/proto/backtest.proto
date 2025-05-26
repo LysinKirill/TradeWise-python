@@ -3,16 +3,41 @@ syntax = "proto3";
 package backtest;
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
 
 service BacktestService {
   rpc StartBacktest(StartBacktestRequest) returns (StartBacktestResponse) {}
   rpc GetBacktestStatus(GetBacktestStatusRequest) returns (GetBacktestStatusResponse) {}
+  rpc GetBacktest(GetBacktestRequest) returns (BacktestInfo) {}
+  rpc CancelBacktest(CancelBacktestRequest) returns (google.protobuf.Empty) {}
 }
 
-enum ExecutionFinishedBehaviour {
-  ExecutionFinishedBehaviour_Unknown = 0;
-  ExecutionFinishedBehaviour_Sell = 1;
-  ExecutionFinishedBehaviour_Hold = 2;
+message CancelBacktestRequest {
+  int64 backtest_id = 1;
+}
+
+message GetBacktestRequest {
+  int64 backtest_id = 1;
+}
+
+message UserInfo {
+  int64 id = 1;
+  string email = 2;
+}
+
+message BacktestInfo {
+  int64 backtest_id = 1;
+  UserInfo user_info = 2;
+  google.protobuf.Timestamp started_at = 3;
+  google.protobuf.Timestamp finished_at = 4;
+  google.protobuf.Timestamp test_period_start = 5;
+  google.protobuf.Timestamp test_period_end = 6;
+  BacktestStatus status = 7;
+  double profit = 8;
+  int32 trades_count = 9;
+  double initial_balance = 10;
+  double final_balance = 11;
+  google.protobuf.Timestamp created_at = 12;
 }
 
 message StartBacktestRequest {
@@ -20,7 +45,6 @@ message StartBacktestRequest {
   google.protobuf.Timestamp from_ = 2;
   google.protobuf.Timestamp to = 3;
   double initial_balance = 4;
-  ExecutionFinishedBehaviour execution_finished_behaviour = 5;
 }
 
 message StartBacktestResponse {
@@ -29,7 +53,11 @@ message StartBacktestResponse {
 
 enum BacktestStatus {
   BacktestStatus_Unknown = 0;
-  BacktestStatus_Running = 1;
+  BacktestStatus_Pending = 1;
+  BacktestStatus_Running = 2;
+  BacktestStatus_Completed = 3;
+  BacktestStatus_Failed = 4;
+  BacktestStatus_Cancelled = 5;
 }
 
 message GetBacktestStatusResponse {

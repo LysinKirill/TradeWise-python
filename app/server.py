@@ -21,13 +21,16 @@ from app.proto import (
 )
 
 from app.grpcServices.UserGrpcService import UserGrpcService
+from app.services.BacktestService import BacktestService
 from app.services.InvestService import InvestService
 from app.services.ModelExecutionService import ModelExecutionService
 from app.services.ModelService import ModelService
 from app.services.UserService import UserService
 from app.services.ClaimValuesService import ClaimValuesService
 from app.infrastructure.GrpcContextAccessor import GrpcContextAccessor
+from app.workers.BacktestExecutionWorker import BacktestExecutionWorker
 from app.workers.ModelExecutionWorker import ModelExecutionWorker
+from dataAccess.BacktestRepository import BacktestRepository
 from dataAccess.ExecutionRepository import ExecutionRepository
 from dataAccess.UserRepository import UserRepository
 from dataAccess.PgModelRepository import PgModelRepository
@@ -111,6 +114,11 @@ class Container(containers.DeclarativeContainer):
         connection_provider=pg_connection_provider
     )
 
+    backtest_repository = providers.Factory(
+        BacktestRepository,
+        connection_provider=pg_connection_provider
+    )
+
     user_client = providers.Singleton(
         UserClient,
         endpoint=t_api_endpoint,
@@ -157,11 +165,7 @@ class Container(containers.DeclarativeContainer):
         ApiBroker
     )
 
-    # trading_window_manager = PresetTradingWindowManager(
-    #     trading_windows=[(time(hour=7, minute=0, second=0, microsecond=0),
-    #                       time(hour=16, minute=50, second=0, microsecond=0))],
-    # )
-
+    # TODO: replace with proper trading window manager
     trading_window_manager = providers.Singleton(
         ConstantTradingWindowManager,
         constant_trading_flag=True
@@ -176,6 +180,14 @@ class Container(containers.DeclarativeContainer):
         candle_generator_factory=candle_generator_factory,
         broker=broker,
         trading_window_manager=trading_window_manager,
+    )
+
+    backtest_service = providers.Factory(
+        BacktestService,
+        backtest_repository=backtest_repository,
+        user_repository=user_repository,
+        model_repository=model_repository,
+        instruments_client=instruments_client,
     )
     user_grpc_service = providers.Factory(
         UserGrpcService,
@@ -194,12 +206,20 @@ class Container(containers.DeclarativeContainer):
         claim_values_service=claim_values_service
     )
     backtest_grpc_service = providers.Factory(
-        BacktestGrpcService
+        BacktestGrpcService,
+        claim_values_service=claim_values_service,
+        backtest_service=backtest_service
     )
 
     model_execution_worker = providers.Factory(
         ModelExecutionWorker,
         execution_service=model_execution_service,
+        interval_seconds=60
+    )
+
+    backtest_execution_worker = providers.Factory(
+        BacktestExecutionWorker,
+        backtest_service=backtest_service,
         interval_seconds=60
     )
 
@@ -249,16 +269,21 @@ async def serve():
     await server.start()
     logger.info("Server is running...")
 
-    worker = container.model_execution_worker()
-    worker_task = asyncio.create_task(worker.start())
+    execution_worker = container.model_execution_worker()
+    execution_worker_task = asyncio.create_task(execution_worker.start())
+
+    backtest_worker = container.backtest_execution_worker()
+    backtest_worker_task = asyncio.create_task(backtest_worker.start())
 
     try:
         while True:
             await asyncio.sleep(1)
     except (asyncio.CancelledError, KeyboardInterrupt):
         logger.info("Shutdown signal received. Gracefully stopping server...")
-        await worker.stop()
-        await worker_task
+        await execution_worker.stop()
+        await execution_worker_task
+        await backtest_worker.stop()
+        await backtest_worker_task
         await server.stop(GRACE_PERIOD_IN_SECOND)
 
 

@@ -23,27 +23,34 @@ _sym_db = _symbol_database.Default()
 
 
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0e\x62\x61\x63ktest.proto\x12\x08\x62\x61\x63ktest\x1a\x1fgoogle/protobuf/timestamp.proto\"\xe0\x01\n\x14StartBacktestRequest\x12\x10\n\x08model_id\x18\x01 \x01(\x03\x12)\n\x05\x66rom_\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12&\n\x02to\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x17\n\x0finitial_balance\x18\x04 \x01(\x01\x12J\n\x1c\x65xecution_finished_behaviour\x18\x05 \x01(\x0e\x32$.backtest.ExecutionFinishedBehaviour\",\n\x15StartBacktestResponse\x12\x13\n\x0b\x62\x61\x63ktest_id\x18\x01 \x01(\x03\"E\n\x19GetBacktestStatusResponse\x12(\n\x06status\x18\x01 \x01(\x0e\x32\x18.backtest.BacktestStatus\"/\n\x18GetBacktestStatusRequest\x12\x13\n\x0b\x62\x61\x63ktest_id\x18\x01 \x01(\x03*\x8e\x01\n\x1a\x45xecutionFinishedBehaviour\x12&\n\"ExecutionFinishedBehaviour_Unknown\x10\x00\x12#\n\x1f\x45xecutionFinishedBehaviour_Sell\x10\x01\x12#\n\x1f\x45xecutionFinishedBehaviour_Hold\x10\x02*H\n\x0e\x42\x61\x63ktestStatus\x12\x1a\n\x16\x42\x61\x63ktestStatus_Unknown\x10\x00\x12\x1a\n\x16\x42\x61\x63ktestStatus_Running\x10\x01\x32\xc5\x01\n\x0f\x42\x61\x63ktestService\x12R\n\rStartBacktest\x12\x1e.backtest.StartBacktestRequest\x1a\x1f.backtest.StartBacktestResponse\"\x00\x12^\n\x11GetBacktestStatus\x12\".backtest.GetBacktestStatusRequest\x1a#.backtest.GetBacktestStatusResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0e\x62\x61\x63ktest.proto\x12\x08\x62\x61\x63ktest\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1bgoogle/protobuf/empty.proto\",\n\x15\x43\x61ncelBacktestRequest\x12\x13\n\x0b\x62\x61\x63ktest_id\x18\x01 \x01(\x03\")\n\x12GetBacktestRequest\x12\x13\n\x0b\x62\x61\x63ktest_id\x18\x01 \x01(\x03\"%\n\x08UserInfo\x12\n\n\x02id\x18\x01 \x01(\x03\x12\r\n\x05\x65mail\x18\x02 \x01(\t\"\xc7\x03\n\x0c\x42\x61\x63ktestInfo\x12\x13\n\x0b\x62\x61\x63ktest_id\x18\x01 \x01(\x03\x12%\n\tuser_info\x18\x02 \x01(\x0b\x32\x12.backtest.UserInfo\x12.\n\nstarted_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12/\n\x0b\x66inished_at\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x35\n\x11test_period_start\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x33\n\x0ftest_period_end\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12(\n\x06status\x18\x07 \x01(\x0e\x32\x18.backtest.BacktestStatus\x12\x0e\n\x06profit\x18\x08 \x01(\x01\x12\x14\n\x0ctrades_count\x18\t \x01(\x05\x12\x17\n\x0finitial_balance\x18\n \x01(\x01\x12\x15\n\rfinal_balance\x18\x0b \x01(\x01\x12.\n\ncreated_at\x18\x0c \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"\x94\x01\n\x14StartBacktestRequest\x12\x10\n\x08model_id\x18\x01 \x01(\x03\x12)\n\x05\x66rom_\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12&\n\x02to\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x17\n\x0finitial_balance\x18\x04 \x01(\x01\",\n\x15StartBacktestResponse\x12\x13\n\x0b\x62\x61\x63ktest_id\x18\x01 \x01(\x03\"E\n\x19GetBacktestStatusResponse\x12(\n\x06status\x18\x01 \x01(\x0e\x32\x18.backtest.BacktestStatus\"/\n\x18GetBacktestStatusRequest\x12\x13\n\x0b\x62\x61\x63ktest_id\x18\x01 \x01(\x03*\xbb\x01\n\x0e\x42\x61\x63ktestStatus\x12\x1a\n\x16\x42\x61\x63ktestStatus_Unknown\x10\x00\x12\x1a\n\x16\x42\x61\x63ktestStatus_Pending\x10\x01\x12\x1a\n\x16\x42\x61\x63ktestStatus_Running\x10\x02\x12\x1c\n\x18\x42\x61\x63ktestStatus_Completed\x10\x03\x12\x19\n\x15\x42\x61\x63ktestStatus_Failed\x10\x04\x12\x1c\n\x18\x42\x61\x63ktestStatus_Cancelled\x10\x05\x32\xd9\x02\n\x0f\x42\x61\x63ktestService\x12R\n\rStartBacktest\x12\x1e.backtest.StartBacktestRequest\x1a\x1f.backtest.StartBacktestResponse\"\x00\x12^\n\x11GetBacktestStatus\x12\".backtest.GetBacktestStatusRequest\x1a#.backtest.GetBacktestStatusResponse\"\x00\x12\x45\n\x0bGetBacktest\x12\x1c.backtest.GetBacktestRequest\x1a\x16.backtest.BacktestInfo\"\x00\x12K\n\x0e\x43\x61ncelBacktest\x12\x1f.backtest.CancelBacktestRequest\x1a\x16.google.protobuf.Empty\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'backtest_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_EXECUTIONFINISHEDBEHAVIOUR']._serialized_start=455
-  _globals['_EXECUTIONFINISHEDBEHAVIOUR']._serialized_end=597
-  _globals['_BACKTESTSTATUS']._serialized_start=599
-  _globals['_BACKTESTSTATUS']._serialized_end=671
-  _globals['_STARTBACKTESTREQUEST']._serialized_start=62
-  _globals['_STARTBACKTESTREQUEST']._serialized_end=286
-  _globals['_STARTBACKTESTRESPONSE']._serialized_start=288
-  _globals['_STARTBACKTESTRESPONSE']._serialized_end=332
-  _globals['_GETBACKTESTSTATUSRESPONSE']._serialized_start=334
-  _globals['_GETBACKTESTSTATUSRESPONSE']._serialized_end=403
-  _globals['_GETBACKTESTSTATUSREQUEST']._serialized_start=405
-  _globals['_GETBACKTESTSTATUSREQUEST']._serialized_end=452
-  _globals['_BACKTESTSERVICE']._serialized_start=674
-  _globals['_BACKTESTSERVICE']._serialized_end=871
+  _globals['_BACKTESTSTATUS']._serialized_start=994
+  _globals['_BACKTESTSTATUS']._serialized_end=1181
+  _globals['_CANCELBACKTESTREQUEST']._serialized_start=90
+  _globals['_CANCELBACKTESTREQUEST']._serialized_end=134
+  _globals['_GETBACKTESTREQUEST']._serialized_start=136
+  _globals['_GETBACKTESTREQUEST']._serialized_end=177
+  _globals['_USERINFO']._serialized_start=179
+  _globals['_USERINFO']._serialized_end=216
+  _globals['_BACKTESTINFO']._serialized_start=219
+  _globals['_BACKTESTINFO']._serialized_end=674
+  _globals['_STARTBACKTESTREQUEST']._serialized_start=677
+  _globals['_STARTBACKTESTREQUEST']._serialized_end=825
+  _globals['_STARTBACKTESTRESPONSE']._serialized_start=827
+  _globals['_STARTBACKTESTRESPONSE']._serialized_end=871
+  _globals['_GETBACKTESTSTATUSRESPONSE']._serialized_start=873
+  _globals['_GETBACKTESTSTATUSRESPONSE']._serialized_end=942
+  _globals['_GETBACKTESTSTATUSREQUEST']._serialized_start=944
+  _globals['_GETBACKTESTSTATUSREQUEST']._serialized_end=991
+  _globals['_BACKTESTSERVICE']._serialized_start=1184
+  _globals['_BACKTESTSERVICE']._serialized_end=1529
 # @@protoc_insertion_point(module_scope)

@@ -46,6 +46,6 @@ class HistoryCandleGenerator(ICandleGenerator):
         preload_candles_count: int = 0,
         stop_event: asyncio.Event | None = None
     ) -> AsyncGenerator[CandleModel | None, None]:
-        #await self.load_data()
+        await self.load_data()
         for candle in self.candle_data:
             yield candle
