@@ -15,7 +15,7 @@ class _20250525_0200_create_backtests_table(ForwardMigration):
                 finished_at TIMESTAMP WITH TIME ZONE,
                 test_period_start TIMESTAMP WITH TIME ZONE NOT NULL,
                 test_period_end TIMESTAMP WITH TIME ZONE NOT NULL,
-                status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'running', 'completed', 'failed')),
+                status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'running', 'completed', 'failed', 'cancelled')),
                 profit NUMERIC(20, 2) NOT NULL DEFAULT 0,
                 trades_count INTEGER NOT NULL DEFAULT 0,
                 initial_balance NUMERIC(20, 2) NOT NULL,
