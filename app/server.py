@@ -188,6 +188,7 @@ class Container(containers.DeclarativeContainer):
         user_repository=user_repository,
         model_repository=model_repository,
         instruments_client=instruments_client,
+        claim_values_service=claim_values_service,
     )
     user_grpc_service = providers.Factory(
         UserGrpcService,

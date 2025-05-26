@@ -1,6 +1,4 @@
-import grpc
 from google.protobuf import empty_pb2
-
 from app.debug.ExceptionHandler import exception_handler
 from app.domain.models.backtest.BacktestModel import BacktestModel
 from app.domain.models.backtest.BacktestStatusModel import BacktestStatusModel
@@ -62,6 +60,14 @@ class BacktestGrpcService(backtest_pb2_grpc.BacktestServiceServicer):
         await self.backtest_service.cancel_backtest(request.backtest_id)
         return empty_pb2.Empty()
 
+    @exception_handler
+    @request_response_logging()
+    @jwt_authorization
+    async def GetAllUserBacktests(self, request, context):
+        backtests = await self.backtest_service.get_backtest_for_user()
+        return backtest_pb2.GetAllUserBacktestsResponse(
+            backtests=list(map(BacktestGrpcService._get_grpc_backtest, backtests))
+        )
 
     @staticmethod
     def _get_grpc_backtest_status(domain_backtest_status: BacktestStatusModel):

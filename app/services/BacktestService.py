@@ -10,7 +10,9 @@ from app.domain.models.backtest.BacktestModel import BacktestModel
 from app.domain.models.backtest.BacktestStatusModel import BacktestStatusModel
 from app.domain.models.backtest.requests.EnqueueBacktestRequestModel import EnqueueBacktestRequestModel
 from app.domain.models.backtest.responses.EnqueueBacktestResponseModel import EnqueueBacktestResponseModel
+from app.domain.models.backtest.responses.GetBacktestForUserResponseModel import GetBacktestForUserResponseModel
 from app.domain.services.IBacktestService import IBacktestService
+from app.domain.services.IClaimValuesService import IClaimValuesService
 from app.mappers.domain_dal.CommonMapper import CommonMapper
 from app.services.ModelExecutionService import ModelExecutionService
 from dataAccess.interfaces.IBacktestRepository import IBacktestRepository
@@ -34,11 +36,13 @@ class BacktestService(IBacktestService):
             user_repository: IUserRepository,
             model_repository: IModelRepository,
             instruments_client: InstrumentsClient,
+            claim_values_service: IClaimValuesService,
     ):
         self.backtest_repository = backtest_repository
         self.user_repository = user_repository
         self.model_repository = model_repository
         self.instruments_client = instruments_client
+        self.claim_values_service = claim_values_service
 
 
     async def enqueue_backtest(self, request: EnqueueBacktestRequestModel) -> EnqueueBacktestResponseModel:
@@ -204,6 +208,19 @@ class BacktestService(IBacktestService):
 
     async def cancel_backtest(self, backtest_id: int) -> None:
         await self.update_backtest_status(backtest_id=backtest_id, status=BacktestStatusModel.CANCELLED)
+
+    async def get_backtests_for_user(self) -> GetBacktestForUserResponseModel:
+        user_email = await self.claim_values_service.get_email()
+        user = await self.user_repository.get_user_by_email(user_email)
+        if user is None:
+            raise UserNotFoundException(user_email=user_email, source="PostgreSQL user table")
+
+        backtests = await self.backtest_repository.get_user_backtests(user.id)
+        return GetBacktestForUserResponseModel(
+            backtests=list(map(BacktestService._get_domain_backtest, backtests))
+        )
+
+
 
     @staticmethod
     def _is_final_status(status: BacktestStatusModel) -> bool:
