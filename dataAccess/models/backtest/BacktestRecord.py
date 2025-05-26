@@ -65,9 +65,9 @@ class BacktestRecord:
             test_period_start=test_period_start,
             test_period_end=test_period_end,
             status=BacktestStatus(status),
-            profit=profit,
+            profit=float(profit) if profit is not None else None,
             trades_count=trades_count,
-            initial_balance=initial_balance,
-            final_balance=final_balance,
+            initial_balance=float(initial_balance) if initial_balance else None,
+            final_balance=float(final_balance) if final_balance else None,
             created_at=created_at
         )

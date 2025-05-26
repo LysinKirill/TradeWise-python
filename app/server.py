@@ -28,6 +28,7 @@ from app.services.ModelService import ModelService
 from app.services.UserService import UserService
 from app.services.ClaimValuesService import ClaimValuesService
 from app.infrastructure.GrpcContextAccessor import GrpcContextAccessor
+from app.workers.BacktestExecutionWorker import BacktestExecutionWorker
 from app.workers.ModelExecutionWorker import ModelExecutionWorker
 from dataAccess.BacktestRepository import BacktestRepository
 from dataAccess.ExecutionRepository import ExecutionRepository
@@ -186,6 +187,7 @@ class Container(containers.DeclarativeContainer):
         backtest_repository=backtest_repository,
         user_repository=user_repository,
         model_repository=model_repository,
+        instruments_client=instruments_client,
     )
     user_grpc_service = providers.Factory(
         UserGrpcService,
@@ -212,6 +214,12 @@ class Container(containers.DeclarativeContainer):
     model_execution_worker = providers.Factory(
         ModelExecutionWorker,
         execution_service=model_execution_service,
+        interval_seconds=60
+    )
+
+    backtest_execution_worker = providers.Factory(
+        BacktestExecutionWorker,
+        backtest_service=backtest_service,
         interval_seconds=60
     )
 
@@ -261,16 +269,21 @@ async def serve():
     await server.start()
     logger.info("Server is running...")
 
-    worker = container.model_execution_worker()
-    worker_task = asyncio.create_task(worker.start())
+    execution_worker = container.model_execution_worker()
+    execution_worker_task = asyncio.create_task(execution_worker.start())
+
+    backtest_worker = container.backtest_execution_worker()
+    backtest_worker_task = asyncio.create_task(backtest_worker.start())
 
     try:
         while True:
             await asyncio.sleep(1)
     except (asyncio.CancelledError, KeyboardInterrupt):
         logger.info("Shutdown signal received. Gracefully stopping server...")
-        await worker.stop()
-        await worker_task
+        await execution_worker.stop()
+        await execution_worker_task
+        await backtest_worker.stop()
+        await backtest_worker_task
         await server.stop(GRACE_PERIOD_IN_SECOND)
 
 

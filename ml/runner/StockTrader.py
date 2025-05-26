@@ -1,89 +1,65 @@
+import asyncio
 import logging
+import traceback
 import numpy as np
 import torch
-import asyncio
-import traceback
 from app.domain.models.invest.CandleModel import CandleModel
 from ml.data.interface.IBroker import IBroker
 from ml.data.interface.ICandleGenerator import ICandleGenerator
 from ml.data.interface.ITradingWindowManager import ITradingWindowManager
 from ml.data.model.OperationType import OperationType
 from ml.dataAugmentation.Normalizer import Normalizer
-from ml.oneMinute.LSTM.StockPriceLstm import StockPriceLstm
-from ml.oneMinute.LSTM.configuration.LstmConfiguration import LstmConfiguration
 from ml.runner.configuration.TradingConfiguration import TradingConfiguration
 
 
 class StockTrader:
     def __init__(
             self,
-            model_configuration: LstmConfiguration,  # TODO: replace with supertype for model configuration
+            model: torch.nn.Module,
+            scaler: Normalizer,
             trading_configuration: TradingConfiguration,
             candle_source: ICandleGenerator,
             broker: IBroker,
             trading_window_manager: ITradingWindowManager,
-            device: str,
             invest_api_key: str,
+            account_id: str,
             instrument_id: str,
             lookback: int = 16,
-            commission: float = 0.0005,
-            log_file: str = "../logging/stock_trader.log"
+            commission: float = 0.0005
     ):
+
+        logger = logging.getLogger(__name__)
+        logger.setLevel(logging.ERROR)
+        self.logger = logger
         self.last_buy_price: float | None = None
         self.trading_window_manager = trading_window_manager
         self.broker = broker
         self.candle_source = candle_source
-        self.logger = logging.getLogger("[STOCK_TRADER]")
-
-        self.logger.handlers = []
-
-        # Disable propagation to root logger (stops double logging)
-        self.logger.propagate = False
-        # if self.logger.hasHandlers():
-        #     self.logger.handlers.clear()
-        file_handler = logging.FileHandler(log_file, mode="w")
-        self.logger.addHandler(file_handler)
 
         self.invest_api_key = invest_api_key
-        self.device = device
-        self.model = StockPriceLstm(model_configuration).to(device)
+        self.account_id = account_id
+        self.model = model
         self.trading_configuration = trading_configuration
 
         self.instrument_id = instrument_id
         self.lookback = lookback
         self.commission = commission
 
-        # State tracking
         self.current_balance: float = 0.0
         self.current_shares: int = 0
         self.candle_history: list[CandleModel] = []
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
         self.model.eval().to(self.device)
-        self.scaler: Normalizer | None = None
+        self.scaler = scaler
         self.current_candle = 1
         self.iterations = 0
 
-    def load(
-        self,
-        saved_model_path: str,
-        saved_normalizer_path: str
-    ):
-        self.model.load_state_dict(torch.load(saved_model_path))
-        with open(saved_normalizer_path, 'r') as f:
-            params = [np.fromstring(s.replace('[', '').replace(']', ''), sep=" ") for s in f.readlines()]
-            self.scaler = Normalizer(
-                mins=params[0],
-                maxs=params[1],
-            )
-
 
     async def trading_cycle(self, current_candle: CandleModel):
-        """Perform one trading decision cycle"""
-        #self.logger.info(f"Trading cycle started. Timestamp = {datetime.now()}")
         try:
-            await self.broker.load_instrument()
-            portfolio_result = await self.broker.get_portfolio()
+            await self.broker.load_instrument(self.instrument_id, self.invest_api_key)
+            portfolio_result = await self.broker.get_portfolio(self.invest_api_key, self.account_id, self.instrument_id)
             if portfolio_result is not None:
                 self.current_balance = portfolio_result.rub
                 self.current_shares = portfolio_result.shares
@@ -92,7 +68,6 @@ class StockTrader:
 
             self.candle_history.append(current_candle)
 
-            # Keep only recent prices for our lookback window
             if len(self.candle_history) > self.lookback:
                 self.candle_history = self.candle_history[-self.lookback:]
             else:
@@ -118,32 +93,58 @@ class StockTrader:
                 instrument_id=self.instrument_id,
                 timestamp=current_candle.timestamp,
             )
-            #self.logger.info(f"Candle #{self.current_candle}: Current price = {current_price:.3f}, Predicted price = {pred_price:.3f}, expected return = {expected_return:.5f}.  DATA: {self.scaler.transform(
-            #    np.array(self.price_history).reshape(-1, 1))}")
-            self.logger.info(f"Candle #{self.current_candle}: Current price = {current_price:.3f}, Predicted price = {pred_price:.3f}, expected return = {expected_return:.5f}. Portfolio value = {await self.broker.get_portfolio_value(current_price):.2f}, Timestamp = {current_candle.timestamp}" + ("" if trade_available else " [Trade unavailable]"))
+
+            portfolio_value = await self.broker.get_portfolio_value(current_price)
+
+            self.logger.info(
+                f"Candle #{self.current_candle}:"
+                f" Current price = {current_price:.3f},"
+                f" Predicted price = {pred_price:.3f},"
+                f" expected return = {expected_return:.5f}."
+                f" Portfolio value = {portfolio_value:.2f},"
+                f" Timestamp = {current_candle.timestamp}" + ("" if trade_available else " [Trade unavailable]")
+            )
             self.current_candle += 1
 
             if not trade_available:
                 return
 
-
-
             if expected_return > self.trading_configuration.buy_signal and self.current_shares == 0:
-                max_lots = await self.broker.get_max_lots(OperationType.Buy, expected_price=current_price)
+                max_lots = await self.broker.get_max_lots(
+                    invest_api_key=self.invest_api_key,
+                    account_id=self.account_id,
+                    instrument_id=self.instrument_id,
+                    operation=OperationType.Buy,
+                    expected_price=current_price
+                )
                 if max_lots > 0:
                     self.logger.info(f"Place buy order for {max_lots} lots")
                     await self.broker.place_order(
+                        invest_api_key=self.invest_api_key,
+                        account_id=self.account_id,
+                        instrument_id=self.instrument_id,
                         operation=OperationType.Buy,
                         quantity=max_lots,
                         expected_price=current_price,
                     )
+
                     self.last_buy_price = current_price
             elif expected_return < -self.trading_configuration.sell_signal and self.current_shares > 0:
-                max_lots = await self.broker.get_max_lots(OperationType.Sell, expected_price=current_price)
+                max_lots = await self.broker.get_max_lots(
+                    invest_api_key=self.invest_api_key,
+                    instrument_id=self.instrument_id,
+                    account_id=self.account_id,
+                    operation=OperationType.Sell,
+                    expected_price=current_price
+                )
+
                 if max_lots > 0:
                     self.logger.info(f"Place sell order for {max_lots} lots")
                     await self.broker.place_order(
-                        OperationType.Sell,
+                        invest_api_key=self.invest_api_key,
+                        instrument_id=self.instrument_id,
+                        account_id=self.account_id,
+                        operation=OperationType.Sell,
                         quantity=max_lots,
                         expected_price=current_price
                     )
@@ -157,20 +158,26 @@ class StockTrader:
                         self.trading_configuration.take_profit is not None and
                         price_change_since_last_buy > self.trading_configuration.take_profit
                 ):
-                    max_lots = await self.broker.get_max_lots(OperationType.Sell, expected_price=current_price)
-                    #max_lots = 0
+                    max_lots = await self.broker.get_max_lots(
+                        invest_api_key=self.invest_api_key,
+                        account_id=self.account_id,
+                        instrument_id=self.instrument_id,
+                        operation=OperationType.Sell,
+                        expected_price=current_price
+                    )
                     if max_lots > 0:
                         is_take_profit = self.trading_configuration.take_profit is not None and price_change_since_last_buy > self.trading_configuration.take_profit
                         self.logger.warning(f"Portfolio value before take_profit/stop_loss: {await self.broker.get_portfolio_value(current_price)}")
                         self.logger.warning(f"{'[TAKE_PROFIT]' if is_take_profit else '[STOP_LOSS]'} Place sell order for {max_lots} lots. Estimated loss/profit = {price_change_since_last_buy * self.current_shares * self.last_buy_price}; {price_change_since_last_buy = }, {self.current_shares = }, {self.last_buy_price = }")
                         await self.broker.place_order(
-                            OperationType.Sell,
+                            invest_api_key=self.invest_api_key,
+                            instrument_id=self.instrument_id,
+                            account_id=self.account_id,
+                            operation=OperationType.Sell,
                             quantity=max_lots,
                             expected_price=current_price
                         )
                         self.logger.warning(f"Portfolio value after take_profit/stop_loss: {await self.broker.get_portfolio_value(current_price)}")
-
-
 
         except Exception as e:
             self.logger.error(f"Error in trading cycle: {str(e)}")
@@ -197,4 +204,5 @@ class StockTrader:
                 break
             except Exception as e:
                 self.logger.error(f"Unexpected error: {str(e)}")
-                await asyncio.sleep(60)
+                raise
+                #await asyncio.sleep(60)

@@ -1,5 +1,7 @@
 from datetime import datetime
 from pydapper.commands import CommandsAsync
+
+from app.domain.exceptions.backtest.BacktestResult import BacktestResult
 from dataAccess.interfaces.IBacktestRepository import IBacktestRepository
 from dataAccess.interfaces.IPgConnectionProvider import IPgConnectionProvider
 from dataAccess.models.backtest.BacktestRecord import BacktestRecord
@@ -9,6 +11,29 @@ from dataAccess.models.backtest.BacktestStatus import BacktestStatus
 class BacktestRepository(IBacktestRepository):
     def __init__(self, connection_provider: IPgConnectionProvider):
         self.connection_provider = connection_provider
+
+    BACKTEST_FIELDS_FOR_SELECT = '''
+        b.id,
+        b.started_at,
+        b.finished_at,
+        b.test_period_start,
+        b.test_period_end,
+        b.status,
+        b.profit,
+        b.trades_count,
+        b.initial_balance,
+        b.final_balance,
+        b.created_at,
+        u.id as user_id,
+        u.email,
+        u.invest_api_key,
+        u.invest_account_id,
+        m.id as model_id,
+        m.instrument_id,
+        m."name" as model_name,
+        m.type as model_type,
+        m.created_at as model_created_at
+    '''
 
     async def create_backtest(
             self,
@@ -54,6 +79,28 @@ class BacktestRepository(IBacktestRepository):
 
             return backtest_id
 
+    async def get_first_backtest_by_status(self, status: BacktestStatus) -> BacktestRecord | None:
+        async with self.connection_provider.get_connection() as commands:
+            commands: CommandsAsync
+
+            backtest = await commands.query_first_or_default_async(
+                f'''
+                SELECT
+                {BacktestRepository.BACKTEST_FIELDS_FOR_SELECT}
+                FROM backtests b
+                JOIN users u ON b.user_id = u.id
+                JOIN models m ON b.model_id = m.id
+                WHERE b.status = ?status?
+                ORDER BY b.created_at
+                LIMIT 1;
+                ''',
+                param={"status": status.value},
+                model=BacktestRecord.from_query_row,
+                default=None
+            )
+
+            return backtest
+
     async def get_backtest(
             self,
             backtest_id: int
@@ -62,28 +109,9 @@ class BacktestRepository(IBacktestRepository):
             commands: CommandsAsync
 
             backtest = await commands.query_first_or_default_async(
-                '''
+                f'''
                 SELECT
-                    b.id,
-                    b.started_at,
-                    b.finished_at,
-                    b.test_period_start,
-                    b.test_period_end,
-                    b.status,
-                    b.profit,
-                    b.trades_count,
-                    b.initial_balance,
-                    b.final_balance,
-                    b.created_at,
-                    u.id as user_id,
-                    u.email,
-                    u.invest_api_key,
-                    u.invest_account_id,
-                    m.id as model_id,
-                    m.instrument_id,
-                    m."name" as model_name,
-                    m.type as model_type,
-                    m.created_at as model_created_at
+                {BacktestRepository.BACKTEST_FIELDS_FOR_SELECT}
                 FROM backtests b
                 JOIN users u ON b.user_id = u.id
                 JOIN models m ON b.model_id = m.id
@@ -102,28 +130,9 @@ class BacktestRepository(IBacktestRepository):
             commands: CommandsAsync
 
             backtests = await commands.query_async(
-                '''
+                f'''
                 SELECT
-                    b.id,
-                    b.started_at,
-                    b.finished_at,
-                    b.test_period_start,
-                    b.test_period_end,
-                    b.status,
-                    b.profit,
-                    b.trades_count,
-                    b.initial_balance,
-                    b.final_balance,
-                    b.created_at,
-                    u.id as user_id,
-                    u.email,
-                    u.invest_api_key,
-                    u.invest_account_id,
-                    m.id as model_id,
-                    m.instrument_id,
-                    m."name" as model_name,
-                    m.type as model_type,
-                    m.created_at as model_created_at
+                {BacktestRepository.BACKTEST_FIELDS_FOR_SELECT}
                 FROM backtests b
                 JOIN users u ON b.user_id = u.id
                 JOIN models m ON b.model_id = m.id
@@ -163,3 +172,31 @@ class BacktestRepository(IBacktestRepository):
             )
 
             return updated > 0
+
+    async def set_backtest_result(self, backtest_result: BacktestResult) -> None:
+        async with self.connection_provider.get_connection() as commands:
+            commands: CommandsAsync
+
+            await commands.execute_async(
+                '''
+                UPDATE backtests
+                SET
+                    status = ?status?,
+                    started_at = ?started_at?,
+                    finished_at = ?finished_at?,
+                    profit = ?profit?,
+                    trades_count = ?trades_count?,
+                    final_balance = ?final_balance?
+                WHERE id = ?backtest_id?
+                ''',
+                param={
+                    "status": BacktestStatus.COMPLETED.value,
+                    "started_at": backtest_result.start_timestamp,
+                    "finished_at": backtest_result.end_timestamp,
+                    "backtest_id": backtest_result.backtest_id,
+                    "profit": backtest_result.profit,
+                    "trades_count": backtest_result.trades_count,
+                    "final_balance": backtest_result.final_balance
+                }
+            )
+

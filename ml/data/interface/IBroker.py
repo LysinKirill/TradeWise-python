@@ -14,7 +14,7 @@ class IBroker(ABC):
             self,
             invest_api_key: str,
             account_id: str,
-            instrument_id: str, ) -> GetPortfolioResponse:
+            instrument_id: str) -> GetPortfolioResponse:
         pass
 
     @abstractmethod
