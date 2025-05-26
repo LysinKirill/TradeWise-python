@@ -2,7 +2,7 @@ from pydapper.commands import CommandsAsync
 from migrations.infrastructure.MigrationAttribute import *
 
 
-@migration(version=5, description="Add invest_account_id to users table")
+@migration(version=5, description="Create backtest executions table")
 class _20250525_0200_create_backtests_table(ForwardMigration):
     async def migrate_up(self, commands: CommandsAsync) -> None:
         await commands.execute_async(
