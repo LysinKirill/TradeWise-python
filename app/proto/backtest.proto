@@ -10,6 +10,7 @@ service BacktestService {
   rpc GetBacktestStatus(GetBacktestStatusRequest) returns (GetBacktestStatusResponse) {}
   rpc GetBacktest(GetBacktestRequest) returns (BacktestInfo) {}
   rpc CancelBacktest(CancelBacktestRequest) returns (google.protobuf.Empty) {}
+  rpc GetAllUserBacktests(google.protobuf.Empty) returns (GetAllUserBacktestsResponse) {}
 }
 
 message CancelBacktestRequest {
@@ -38,6 +39,10 @@ message BacktestInfo {
   double initial_balance = 10;
   double final_balance = 11;
   google.protobuf.Timestamp created_at = 12;
+}
+
+message GetAllUserBacktestsResponse {
+  repeated BacktestInfo backtests = 1;
 }
 
 message StartBacktestRequest {
