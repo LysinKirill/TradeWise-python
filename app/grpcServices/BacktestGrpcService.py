@@ -1,8 +1,11 @@
 import grpc
+from google.protobuf import empty_pb2
 
 from app.debug.ExceptionHandler import exception_handler
+from app.domain.models.backtest.BacktestModel import BacktestModel
 from app.domain.models.backtest.BacktestStatusModel import BacktestStatusModel
 from app.domain.models.backtest.requests.EnqueueBacktestRequestModel import EnqueueBacktestRequestModel
+from app.domain.models.user.UserInfoModel import UserInfoModel
 from app.domain.services.IBacktestService import IBacktestService
 from app.domain.services.IClaimValuesService import IClaimValuesService
 from app.infrastructure.JwtAuthorizationDecorator import jwt_authorization
@@ -45,6 +48,20 @@ class BacktestGrpcService(backtest_pb2_grpc.BacktestServiceServicer):
             status=BacktestGrpcService._get_grpc_backtest_status(backtest_status)
         )
 
+    @exception_handler
+    @request_response_logging()
+    @jwt_authorization
+    async def GetBacktest(self, request, context):
+        backtest = await self.backtest_service.get_backtest(request.backtest_id)
+        return BacktestGrpcService._get_grpc_backtest(backtest)
+
+    @exception_handler
+    @request_response_logging()
+    @jwt_authorization
+    async def CancelBacktest(self, request, context):
+        await self.backtest_service.cancel_backtest(request.backtest_id)
+        return empty_pb2.Empty()
+
 
     @staticmethod
     def _get_grpc_backtest_status(domain_backtest_status: BacktestStatusModel):
@@ -54,7 +71,30 @@ class BacktestGrpcService(backtest_pb2_grpc.BacktestServiceServicer):
             case BacktestStatusModel.FAILED: return backtest_pb2.BacktestStatus.BacktestStatus_Failed
             case BacktestStatusModel.RUNNING: return backtest_pb2.BacktestStatus.BacktestStatus_Running
             case BacktestStatusModel.COMPLETED: return backtest_pb2.BacktestStatus.BacktestStatus_Completed
+            case BacktestStatusModel.CANCELLED: return backtest_pb2.BacktestStatus.BacktestStatus_Cancelled
 
         return backtest_pb2.BacktestStatus.BacktestStatus_Unknown
 
+    @staticmethod
+    def _get_grpc_user(domain_user: UserInfoModel):
+        return backtest_pb2.UserInfo(
+            id=domain_user.id,
+            email=domain_user.email,
+        )
 
+    @staticmethod
+    def _get_grpc_backtest(domain_backtest: BacktestModel):
+        return backtest_pb2.BacktestInfo(
+            backtest_id=domain_backtest.id,
+            user_info=BacktestGrpcService._get_grpc_user(domain_backtest.user_info),
+            started_at=domain_backtest.started_at,
+            finished_at=domain_backtest.finished_at,
+            test_period_start=domain_backtest.test_period_start,
+            test_period_end=domain_backtest.test_period_end,
+            status=BacktestGrpcService._get_grpc_backtest_status(domain_backtest.status),
+            profit=domain_backtest.profit,
+            trades_count=domain_backtest.trades_count,
+            initial_balance=domain_backtest.initial_balance,
+            final_balance=domain_backtest.final_balance,
+            created_at=domain_backtest.created_at,
+        )

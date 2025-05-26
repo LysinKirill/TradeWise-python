@@ -202,6 +202,9 @@ class BacktestService(IBacktestService):
             finished_at=finished_at
         )
 
+    async def cancel_backtest(self, backtest_id: int) -> None:
+        await self.update_backtest_status(backtest_id=backtest_id, status=BacktestStatusModel.CANCELLED)
+
     @staticmethod
     def _is_final_status(status: BacktestStatusModel) -> bool:
         return (status == BacktestStatus.COMPLETED or

@@ -27,5 +27,9 @@ class IBacktestService(ABC):
         pass
 
     @abstractmethod
+    async def cancel_backtest(self, backtest_id: int) -> None:
+        pass
+
+    @abstractmethod
     async def update_backtest_status(self, backtest_id: int, status: BacktestStatusModel) -> None:
         pass
