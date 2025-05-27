@@ -5,6 +5,8 @@ import grpc
 from app.domain.models.invest.CandleModel import CandleModel
 from app.domain.models.invest.InstrumentStatType import InstrumentStatType
 from app.domain.models.invest.requests import GetInstrumentStatRequestModel, GetCandlesRequestModel
+from app.domain.services.IClaimValuesService import IClaimValuesService
+from dataAccess.interfaces.IUserRepository import IUserRepository
 from externalClients.TInvestApi.handlers.BaseClient import BaseClient
 from externalClients.TInvestApi.proto import (
     marketdata_pb2, marketdata_pb2_grpc,
@@ -13,8 +15,13 @@ from externalClients.TInvestApi.proto import (
 
 
 class MarketDataClient(BaseClient):
-    def __init__(self, endpoint: str, api_key: str):
-        super().__init__(endpoint, api_key)
+    def __init__(
+            self,
+            endpoint: str,
+            claim_values_service: IClaimValuesService,
+            user_repository: IUserRepository
+    ):
+        super().__init__(endpoint, claim_values_service, user_repository)
         self.stub = marketdata_pb2_grpc.MarketDataServiceStub(self.channel)
 
     async def get_candles(self, request: GetCandlesRequestModel.GetCandlesRequestModel) -> list[CandleModel]:
@@ -25,7 +32,7 @@ class MarketDataClient(BaseClient):
         )
         setattr(invest_api_request, "from", request.from_)
 
-        response = await self.stub.GetCandles(invest_api_request, metadata=self.get_metadata())
+        response = await self.stub.GetCandles(invest_api_request, metadata=await self.get_metadata())
 
         return [CandleModel(
             open=BaseClient._quotation_to_float(candle.open),
@@ -58,7 +65,7 @@ class MarketDataClient(BaseClient):
         )
         setattr(invest_api_request, "from", datetime_from)
         try:
-            invest_api_response = await self.stub.GetTechAnalysis(invest_api_request, metadata=self.get_metadata())
+            invest_api_response = await self.stub.GetTechAnalysis(invest_api_request, metadata=await self.get_metadata())
         except grpc.RpcError:
             return None
 
