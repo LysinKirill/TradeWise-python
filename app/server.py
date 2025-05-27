@@ -248,16 +248,7 @@ async def serve():
     register_grpc_services(container, server)
 
     try:
-        with open('./certs/cert.pem', 'rb') as f:
-            cert = f.read()
-        with open('./certs/key.pem', 'rb') as f:
-            key = f.read()
-
-        server_credentials = grpc.ssl_server_credentials(
-            [(key, cert)]
-        )
-
-        server.add_secure_port(f'[::]:{SERVER_PORT}', server_credentials)
+        server.add_insecure_port(f'[::]:{SERVER_PORT}')
         logger.info(f"Server started on [::]:{SERVER_PORT}")
 
     except Exception as e:
