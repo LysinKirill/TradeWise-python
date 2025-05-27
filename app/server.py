@@ -60,7 +60,7 @@ SERVER_PORT = 50051
 
 TINKOFF_API_PROD = 'invest-public-api.tinkoff.ru:443'
 TINKOFF_API_SANDBOX = 'sandbox-invest-public-api.tinkoff.ru:443'
-
+load_dotenv()
 
 
 class Container(containers.DeclarativeContainer):
@@ -79,7 +79,6 @@ class Container(containers.DeclarativeContainer):
         backoff_strategy=BackoffStrategy.Linear
     )
 
-    t_api_token = config.INVEST_TOKEN
     t_api_endpoint = config.TINKOFF_API_PROD
     jwt_secret = config.JWT_SECRET
 
@@ -92,11 +91,11 @@ class Container(containers.DeclarativeContainer):
 
     pg_connection_provider = providers.Singleton(
         PgConnectionProvider,
-        username=os.getenv('DB_USER', 'postgres'),
-        password=os.getenv('DB_PASSWORD', 'postgres'),
-        host=os.getenv('DB_HOST','python-db'),
-        port=int(os.getenv('DB_PORT', 5432)),
-        db=os.getenv('DB_NAME', 'python-db')
+        username=os.getenv('DB_USER'),
+        password=os.getenv('DB_PASSWORD'),
+        host=os.getenv('DB_HOST'),
+        port=int(os.getenv('DB_PORT')),
+        db=os.getenv('DB_NAME')
     )
 
     user_repository = providers.Factory(
@@ -119,25 +118,29 @@ class Container(containers.DeclarativeContainer):
         connection_provider=pg_connection_provider
     )
 
-    user_client = providers.Singleton(
+    user_client = providers.Factory(
         UserClient,
         endpoint=t_api_endpoint,
-        api_key=t_api_token
+        claim_values_service=claim_values_service,
+        user_repository=user_repository,
     )
-    instruments_client = providers.Singleton(
+    instruments_client = providers.Factory(
         InstrumentsClient,
         endpoint=t_api_endpoint,
-        api_key=t_api_token
+        claim_values_service=claim_values_service,
+        user_repository=user_repository,
     )
-    marketdata_client = providers.Singleton(
+    marketdata_client = providers.Factory(
         MarketDataClient,
         endpoint=t_api_endpoint,
-        api_key=t_api_token
+        claim_values_service=claim_values_service,
+        user_repository=user_repository,
     )
-    operations_client = providers.Singleton(
+    operations_client = providers.Factory(
         OperationClient,
         endpoint=t_api_endpoint,
-        api_key=t_api_token
+        claim_values_service=claim_values_service,
+        user_repository=user_repository,
     )
     user_service = providers.Factory(
         UserService,
@@ -226,18 +229,12 @@ class Container(containers.DeclarativeContainer):
 
 
 async def serve():
-    load_dotenv()
-
-    access_token = os.environ.get("INVEST_TOKEN")
     jwt_secret = os.environ.get("JWT_SECRET")
-    if not access_token:
-        raise ValueError("Environment variable INVEST_TOKEN is not set!")
     if not jwt_secret:
         raise ValueError("Environment variable JWT_SECRET is not set!")
 
     container = Container()
     container.config.override({
-        'INVEST_TOKEN': access_token,
         'TINKOFF_API_PROD': TINKOFF_API_PROD,
         'JWT_SECRET': jwt_secret,
     })
