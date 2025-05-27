@@ -1,17 +1,24 @@
 from app.domain.models.user import AccountStatusModel
+from app.domain.services.IClaimValuesService import IClaimValuesService
+from dataAccess.interfaces.IUserRepository import IUserRepository
 from externalClients.TInvestApi.handlers.BaseClient import BaseClient
 from externalClients.TInvestApi.proto import users_pb2, users_pb2_grpc
 
 
 class UserClient(BaseClient):
-    def __init__(self, endpoint: str, api_key: str):
-        super().__init__(endpoint, api_key)
+    def __init__(
+            self,
+            endpoint: str,
+            claim_values_service: IClaimValuesService,
+            user_repository: IUserRepository
+    ):
+        super().__init__(endpoint, claim_values_service, user_repository)
         self.stub = users_pb2_grpc.UsersServiceStub(self.channel)
 
     async def get_accounts(self, account_status: AccountStatusModel.AccountStatusModel =
                      AccountStatusModel.AccountStatusModel.ACCOUNT_STATUS_ALL):
         request = users_pb2.GetAccountsRequest(status=UserClient.__get_client_account_status(account_status))
-        response = await self.stub.GetAccounts(request, metadata=self.get_metadata())
+        response = await self.stub.GetAccounts(request, metadata=await self.get_metadata())
 
         return response
 

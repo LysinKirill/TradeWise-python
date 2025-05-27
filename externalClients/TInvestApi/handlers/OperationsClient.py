@@ -1,4 +1,6 @@
 from app.domain.models.user.UserAssetInfoModel import UserAssetInfoModel
+from app.domain.services.IClaimValuesService import IClaimValuesService
+from dataAccess.interfaces.IUserRepository import IUserRepository
 from externalClients.TInvestApi.const.Instruments import Instrument
 from app.domain.models.user.responses.GetPortfolioResponseModel import GetPortfolioResponseModel
 from externalClients.TInvestApi.handlers.BaseClient import BaseClient
@@ -7,13 +9,18 @@ from externalClients.TInvestApi.proto import (
 )
 
 class OperationClient(BaseClient):
-    def __init__(self, endpoint: str, api_key: str):
-        super().__init__(endpoint, api_key)
+    def __init__(
+            self,
+            endpoint: str,
+            claim_values_service: IClaimValuesService,
+            user_repository: IUserRepository
+    ):
+        super().__init__(endpoint, claim_values_service, user_repository)
         self.stub = operations_pb2_grpc.OperationsServiceStub(self.channel)
 
     async def get_portfolio(self, account_id: str) -> GetPortfolioResponseModel | None:
         request = operations_pb2.PortfolioRequest(account_id=account_id)
-        response = await self.stub.GetPortfolio(request, metadata=self.get_metadata())
+        response = await self.stub.GetPortfolio(request, metadata=await self.get_metadata())
 
         ruble_balance = None
         asset_positions = []
