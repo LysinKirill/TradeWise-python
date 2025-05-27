@@ -10,3 +10,4 @@ class BusinessErrorCode(Enum):
     BacktestNotFound = 5
     BacktestAlreadyQueued = 6
     InvalidBacktestStateTransition = 7
+    InvestApiKeyNotSet = 7
