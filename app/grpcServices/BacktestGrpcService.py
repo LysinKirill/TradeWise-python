@@ -3,6 +3,7 @@ from app.debug.ExceptionHandler import exception_handler
 from app.domain.models.backtest.BacktestModel import BacktestModel
 from app.domain.models.backtest.BacktestStatusModel import BacktestStatusModel
 from app.domain.models.backtest.requests.EnqueueBacktestRequestModel import EnqueueBacktestRequestModel
+from app.domain.models.ml_model.ShortModelInfoModel import ShortModelInfoModel
 from app.domain.models.user.UserInfoModel import UserInfoModel
 from app.domain.services.IBacktestService import IBacktestService
 from app.domain.services.IClaimValuesService import IClaimValuesService
@@ -103,4 +104,15 @@ class BacktestGrpcService(backtest_pb2_grpc.BacktestServiceServicer):
             initial_balance=domain_backtest.initial_balance,
             final_balance=domain_backtest.final_balance,
             created_at=domain_backtest.created_at,
+            model_info=BacktestGrpcService._get_grpc_model_info(domain_backtest.model_info),
+        )
+
+    @staticmethod
+    def _get_grpc_model_info(domain_model: ShortModelInfoModel):
+        return backtest_pb2.ShortModelInfo(
+            id=domain_model.id,
+            instrument_id=domain_model.instrument_id,
+            name=domain_model.name,
+            type=domain_model.model_type,
+            created_at=domain_model.created_at,
         )

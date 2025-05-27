@@ -39,6 +39,7 @@ message BacktestInfo {
   double initial_balance = 10;
   double final_balance = 11;
   google.protobuf.Timestamp created_at = 12;
+  ShortModelInfo model_info = 13;
 }
 
 message GetAllUserBacktestsResponse {
@@ -73,3 +74,10 @@ message GetBacktestStatusRequest {
   int64 backtest_id = 1;
 }
 
+message ShortModelInfo {
+  int64 id = 1;
+  string instrument_id = 2;
+  string name = 3;
+  string type = 4;
+  google.protobuf.Timestamp created_at = 5;
+}

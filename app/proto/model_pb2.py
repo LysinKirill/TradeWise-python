@@ -26,35 +26,35 @@ from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0bmodel.proto\x12\x05model\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"/\n\x17GetExecutionInfoRequest\x12\x14\n\x0c\x65xecution_id\x18\x01 \x01(\x03\"\xec\x02\n\rExecutionInfo\x12\x14\n\x0c\x65xecution_id\x18\x01 \x01(\x03\x12&\n\x06status\x18\x02 \x01(\x0e\x32\x16.model.ExecutionStatus\x12.\n\nstarted_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12/\n\x0b\x66inished_at\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12,\n\x08\x64\x65\x61\x64line\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x12\n\nmax_budget\x18\x06 \x01(\x01\x12\x15\n\rcurrent_spent\x18\x07 \x01(\x01\x12\x14\n\x0cshares_owned\x18\x08 \x01(\x05\x12\"\n\tuser_info\x18\t \x01(\x0b\x32\x0f.model.UserInfo\x12)\n\nmodel_info\x18\n \x01(\x0b\x32\x15.model.ShortModelInfo\"%\n\x08UserInfo\x12\n\n\x02id\x18\x01 \x01(\x03\x12\r\n\x05\x65mail\x18\x02 \x01(\t\",\n\x14StopExecutionRequest\x12\x14\n\x0c\x65xecution_id\x18\x01 \x01(\x03\"1\n\x19GetExecutionStatusRequest\x12\x14\n\x0c\x65xecution_id\x18\x01 \x01(\x03\"D\n\x1aGetExecutionStatusResponse\x12&\n\x06status\x18\x01 \x01(\x0e\x32\x16.model.ExecutionStatus\"j\n\x15StartExecutionRequest\x12\x10\n\x08model_id\x18\x01 \x01(\x03\x12\x17\n\x0finitial_balance\x18\x02 \x01(\x01\x12&\n\x1emax_execution_duration_seconds\x18\x03 \x01(\x05\".\n\x16StartExecutionResponse\x12\x14\n\x0c\x65xecution_id\x18\x01 \x01(\x03\"=\n\x14GetAllModelsResponse\x12%\n\x06models\x18\x01 \x03(\x0b\x32\x15.model.ShortModelInfo\"\x7f\n\x0eShortModelInfo\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x15\n\rinstrument_id\x18\x02 \x01(\t\x12\x0c\n\x04name\x18\x03 \x01(\t\x12\x0c\n\x04type\x18\x04 \x01(\t\x12.\n\ncreated_at\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp*\xa3\x01\n\x0f\x45xecutionStatus\x12\x1b\n\x17\x45xecutionStatus_Unknown\x10\x00\x12\x1b\n\x17\x45xecutionStatus_Pending\x10\x01\x12\x1b\n\x17\x45xecutionStatus_Running\x10\x02\x12\x1a\n\x16\x45xecutionStatus_Failed\x10\x03\x12\x1d\n\x19\x45xecutionStatus_Completed\x10\x04\x32\x97\x03\n\x0cModelService\x12\x45\n\x0cGetAllModels\x12\x16.google.protobuf.Empty\x1a\x1b.model.GetAllModelsResponse\"\x00\x12O\n\x0eStartExecution\x12\x1c.model.StartExecutionRequest\x1a\x1d.model.StartExecutionResponse\"\x00\x12\x46\n\rStopExecution\x12\x1b.model.StopExecutionRequest\x1a\x16.google.protobuf.Empty\"\x00\x12[\n\x12GetExecutionStatus\x12 .model.GetExecutionStatusRequest\x1a!.model.GetExecutionStatusResponse\"\x00\x12J\n\x10GetExecutionInfo\x12\x1e.model.GetExecutionInfoRequest\x1a\x14.model.ExecutionInfo\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0bmodel.proto\x12\x05model\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"/\n\x17GetExecutionInfoRequest\x12\x14\n\x0c\x65xecution_id\x18\x01 \x01(\x03\"\x84\x03\n\rExecutionInfo\x12\x14\n\x0c\x65xecution_id\x18\x01 \x01(\x03\x12&\n\x06status\x18\x02 \x01(\x0e\x32\x16.model.ExecutionStatus\x12.\n\nstarted_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12/\n\x0b\x66inished_at\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12,\n\x08\x64\x65\x61\x64line\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x12\n\nmax_budget\x18\x06 \x01(\x01\x12\x15\n\rcurrent_spent\x18\x07 \x01(\x01\x12\x14\n\x0cshares_owned\x18\x08 \x01(\x05\x12\"\n\tuser_info\x18\t \x01(\x0b\x32\x0f.model.UserInfo\x12)\n\nmodel_info\x18\n \x01(\x0b\x32\x15.model.ShortModelInfo\x12\x16\n\x0eis_paper_trade\x18\x0b \x01(\x08\"%\n\x08UserInfo\x12\n\n\x02id\x18\x01 \x01(\x03\x12\r\n\x05\x65mail\x18\x02 \x01(\t\",\n\x14StopExecutionRequest\x12\x14\n\x0c\x65xecution_id\x18\x01 \x01(\x03\"1\n\x19GetExecutionStatusRequest\x12\x14\n\x0c\x65xecution_id\x18\x01 \x01(\x03\"D\n\x1aGetExecutionStatusResponse\x12&\n\x06status\x18\x01 \x01(\x0e\x32\x16.model.ExecutionStatus\"\x82\x01\n\x15StartExecutionRequest\x12\x10\n\x08model_id\x18\x01 \x01(\x03\x12\x17\n\x0finitial_balance\x18\x02 \x01(\x01\x12&\n\x1emax_execution_duration_seconds\x18\x03 \x01(\x05\x12\x16\n\x0eis_paper_trade\x18\x04 \x01(\x08\".\n\x16StartExecutionResponse\x12\x14\n\x0c\x65xecution_id\x18\x01 \x01(\x03\"=\n\x14GetAllModelsResponse\x12%\n\x06models\x18\x01 \x03(\x0b\x32\x15.model.ShortModelInfo\"\x7f\n\x0eShortModelInfo\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x15\n\rinstrument_id\x18\x02 \x01(\t\x12\x0c\n\x04name\x18\x03 \x01(\t\x12\x0c\n\x04type\x18\x04 \x01(\t\x12.\n\ncreated_at\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp*\xa3\x01\n\x0f\x45xecutionStatus\x12\x1b\n\x17\x45xecutionStatus_Unknown\x10\x00\x12\x1b\n\x17\x45xecutionStatus_Pending\x10\x01\x12\x1b\n\x17\x45xecutionStatus_Running\x10\x02\x12\x1a\n\x16\x45xecutionStatus_Failed\x10\x03\x12\x1d\n\x19\x45xecutionStatus_Completed\x10\x04\x32\x97\x03\n\x0cModelService\x12\x45\n\x0cGetAllModels\x12\x16.google.protobuf.Empty\x1a\x1b.model.GetAllModelsResponse\"\x00\x12O\n\x0eStartExecution\x12\x1c.model.StartExecutionRequest\x1a\x1d.model.StartExecutionResponse\"\x00\x12\x46\n\rStopExecution\x12\x1b.model.StopExecutionRequest\x1a\x16.google.protobuf.Empty\"\x00\x12[\n\x12GetExecutionStatus\x12 .model.GetExecutionStatusRequest\x1a!.model.GetExecutionStatusResponse\"\x00\x12J\n\x10GetExecutionInfo\x12\x1e.model.GetExecutionInfoRequest\x1a\x14.model.ExecutionInfo\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'model_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_EXECUTIONSTATUS']._serialized_start=1055
-  _globals['_EXECUTIONSTATUS']._serialized_end=1218
+  _globals['_EXECUTIONSTATUS']._serialized_start=1104
+  _globals['_EXECUTIONSTATUS']._serialized_end=1267
   _globals['_GETEXECUTIONINFOREQUEST']._serialized_start=84
   _globals['_GETEXECUTIONINFOREQUEST']._serialized_end=131
   _globals['_EXECUTIONINFO']._serialized_start=134
-  _globals['_EXECUTIONINFO']._serialized_end=498
-  _globals['_USERINFO']._serialized_start=500
-  _globals['_USERINFO']._serialized_end=537
-  _globals['_STOPEXECUTIONREQUEST']._serialized_start=539
-  _globals['_STOPEXECUTIONREQUEST']._serialized_end=583
-  _globals['_GETEXECUTIONSTATUSREQUEST']._serialized_start=585
-  _globals['_GETEXECUTIONSTATUSREQUEST']._serialized_end=634
-  _globals['_GETEXECUTIONSTATUSRESPONSE']._serialized_start=636
-  _globals['_GETEXECUTIONSTATUSRESPONSE']._serialized_end=704
-  _globals['_STARTEXECUTIONREQUEST']._serialized_start=706
-  _globals['_STARTEXECUTIONREQUEST']._serialized_end=812
-  _globals['_STARTEXECUTIONRESPONSE']._serialized_start=814
-  _globals['_STARTEXECUTIONRESPONSE']._serialized_end=860
-  _globals['_GETALLMODELSRESPONSE']._serialized_start=862
-  _globals['_GETALLMODELSRESPONSE']._serialized_end=923
-  _globals['_SHORTMODELINFO']._serialized_start=925
-  _globals['_SHORTMODELINFO']._serialized_end=1052
-  _globals['_MODELSERVICE']._serialized_start=1221
-  _globals['_MODELSERVICE']._serialized_end=1628
+  _globals['_EXECUTIONINFO']._serialized_end=522
+  _globals['_USERINFO']._serialized_start=524
+  _globals['_USERINFO']._serialized_end=561
+  _globals['_STOPEXECUTIONREQUEST']._serialized_start=563
+  _globals['_STOPEXECUTIONREQUEST']._serialized_end=607
+  _globals['_GETEXECUTIONSTATUSREQUEST']._serialized_start=609
+  _globals['_GETEXECUTIONSTATUSREQUEST']._serialized_end=658
+  _globals['_GETEXECUTIONSTATUSRESPONSE']._serialized_start=660
+  _globals['_GETEXECUTIONSTATUSRESPONSE']._serialized_end=728
+  _globals['_STARTEXECUTIONREQUEST']._serialized_start=731
+  _globals['_STARTEXECUTIONREQUEST']._serialized_end=861
+  _globals['_STARTEXECUTIONRESPONSE']._serialized_start=863
+  _globals['_STARTEXECUTIONRESPONSE']._serialized_end=909
+  _globals['_GETALLMODELSRESPONSE']._serialized_start=911
+  _globals['_GETALLMODELSRESPONSE']._serialized_end=972
+  _globals['_SHORTMODELINFO']._serialized_start=974
+  _globals['_SHORTMODELINFO']._serialized_end=1101
+  _globals['_MODELSERVICE']._serialized_start=1270
+  _globals['_MODELSERVICE']._serialized_end=1677
 # @@protoc_insertion_point(module_scope)
