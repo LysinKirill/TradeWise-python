@@ -1,3 +1,6 @@
+import grpc
+
+from app.domain.exceptions.user.NoAccountsExistException import NoAccountsExistException
 from app.domain.models.user import AccountStatusModel
 from app.domain.services.IClaimValuesService import IClaimValuesService
 from dataAccess.interfaces.IUserRepository import IUserRepository
@@ -19,8 +22,20 @@ class UserClient(BaseClient):
                      AccountStatusModel.AccountStatusModel.ACCOUNT_STATUS_ALL):
         request = users_pb2.GetAccountsRequest(status=UserClient.__get_client_account_status(account_status))
         response = await self.stub.GetAccounts(request, metadata=await self.get_metadata())
-
         return response
+
+    async def get_active_account_with_token(
+            self,
+            token: str
+    ):
+        request = users_pb2.GetAccountsRequest(status=UserClient.__get_client_account_status(AccountStatusModel.AccountStatusModel.ACCOUNT_STATUS_OPEN))
+        try:
+            response = await self.stub.GetAccounts(request, metadata=[('authorization', f'Bearer {token}')])
+            return response
+        except grpc.RpcError as e:
+            if e.code() == grpc.StatusCode.UNAUTHENTICATED:
+                raise NoAccountsExistException("No invest accounts for user found.")
+            raise
 
 
     @staticmethod

@@ -38,9 +38,8 @@ class UserService(IUserService):
         )
 
     async def add_invest_api_key(self, request: AddInvestApiKeyRequestModel.AddInvestApiKeyRequestModel) -> bool:
-        accounts = (await self.get_accounts(request=GetAccountsRequestModel.GetAccountsRequestModel(
-            status=AccountStatusModel.AccountStatusModel.ACCOUNT_STATUS_OPEN
-        ))).accounts
+        api_response = await self.user_client.get_active_account_with_token(request.api_key)
+        accounts = list(map(UserService.__get_account, api_response.accounts))
 
         if not accounts:
             raise NoAccountsExistException("No invest accounts for user found.")
